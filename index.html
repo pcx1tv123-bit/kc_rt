@@ -2148,6 +2148,9 @@ function renderAdminPaymentsView(el) {
     el.innerHTML = html;
 }
 
+// ==========================================
+// --- USER VIEWS RENDERING ---
+// ==========================================
 function renderAdminSettingsView(el) {
     const cfg = systemState.config;
     el.innerHTML = `
@@ -2165,22 +2168,34 @@ function renderAdminSettingsView(el) {
         <div class="form-group" style="background:#fff3f5; padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
             <label style="font-weight:bold; color:var(--primary); display:block; margin-bottom:10px;">🖼️ อัปโหลดรูปภาพสื่อส่วนหัวและระบบร้านค้า (ห้ามใช้ URL)</label>
             
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
                 <div>
-                    <label style="font-size:12px;">1. โลโก้ร้านค้า (Store Logo)</label>
+                    <label style="font-size:12px; font-weight:bold;">1. โลโก้ร้านค้า (Store Logo)</label>
                     <div class="upload-dropzone" id="logoDropzone">
                         <span class="dz-text" style="font-size:11px;">วางรูปโลโก้</span>
                         <input type="file" accept="image/*" onchange="handleFileSelect(event, 'logoPreview', (url) => { systemState.config.storeLogo = url; })">
                     </div>
-                    <div class="preview-box" id="logoPreview"><img src="${cfg.storeLogo}"></div>
+                    <div class="preview-box" id="logoPreview"><img src="${cfg.storeLogo || ''}" style="max-width:100%; max-height:100px; object-fit:contain;"></div>
                 </div>
+
                 <div>
-                    <label style="font-size:12px;">2. คิวอาร์โค้ดรับเงิน PromptPay QR</label>
+                    <label style="font-size:12px; font-weight:bold;">2. แบนเนอร์โฮมเพจ (Homepage Banner)</label>
+                    <div class="upload-dropzone" id="bannerDropzone">
+                        <span class="dz-text" style="font-size:11px;">วางรูป Banner</span>
+                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'bannerPreview', (url) => { systemState.config.homepageImage = url; })">
+                    </div>
+                    <div class="preview-box" id="bannerPreview">
+                        <img src="${cfg.homepageImage || ''}" style="max-width:100%; max-height:100px; object-fit:contain;" alt="banner picture">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:12px; font-weight:bold;">3. คิวอาร์โค้ดรับเงิน PromptPay QR</label>
                     <div class="upload-dropzone" id="qrDropzone">
                         <span class="dz-text" style="font-size:11px;">วางรูป QR Code</span>
                         <input type="file" accept="image/*" onchange="handleFileSelect(event, 'qrPreview', (url) => { systemState.config.promptpayQrUrl = url; })">
                     </div>
-                    <div class="preview-box" id="qrPreview"><img src="${cfg.promptpayQrUrl}"></div>
+                    <div class="preview-box" id="qrPreview"><img src="${cfg.promptpayQrUrl || ''}" style="max-width:100%; max-height:100px; object-fit:contain;"></div>
                 </div>
             </div>
         </div>
@@ -2205,7 +2220,9 @@ function renderAdminSettingsView(el) {
         <button class="btn btn-orange btn-block" onclick="saveWebsiteConfigs()">💾 บันทึกสัญญารับรองค่าคอนฟิกทั้งหมด</button>
     `;
     
+    // ผูกระบบ Drag & Drop ให้ครบทั้ง 3 ช่อง
     setupDragAndDrop('logoDropzone', 'logoPreview', (url) => { systemState.config.storeLogo = url; });
+    setupDragAndDrop('bannerDropzone', 'bannerPreview', (url) => { systemState.config.homepageImage = url; });
     setupDragAndDrop('qrDropzone', 'qrPreview', (url) => { systemState.config.promptpayQrUrl = url; });
 }
 
@@ -2327,7 +2344,81 @@ function sendAdminChatMessage() {
         renderAdminLogsView(document.getElementById('mainContent'));
     }
 }
+// ==============================================================================
+// เริ่มต้น: ระบบจัดเก็บข้อมูลถาวร (Persistent Data Storage Module)
+// คัดลอกก้อนนี้ไปวางไว้ท้ายสุดของสคริปต์ได้เลย
+// ==============================================================================
 
+const DatabaseManager = {
+    STORAGE_KEY: 'KACHA_SHOPBOT_DATA',
+
+    // 1. ฟังก์ชันโหลดข้อมูลทั้งหมดจาก LocalStorage
+    load: function() {
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        if (data) {
+            // โหลดข้อมูลที่มีอยู่แล้วใน Storage กลับมาใส่ในตัวแปรระบบเดิม
+            window.systemState = Object.assign(window.systemState || {}, JSON.parse(data));
+            console.log("Database: Loaded successfully");
+        } else {
+            this.save(); // ถ้าไม่มีข้อมูล ให้สร้างไฟล์ว่างเริ่มแรก
+        }
+    },
+
+    // 2. ฟังก์ชันบันทึกข้อมูล (เรียกใช้เมื่อมีการเปลี่ยนแปลงข้อมูลใดๆ)
+    save: function() {
+        if (window.systemState) {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(window.systemState));
+        }
+    },
+
+    // 3. ฟังก์ชันดึงข้อมูลเฉพาะส่วน (เช่น ดึงเฉพาะประวัติการสั่งซื้อ)
+    getData: function(key) {
+        return window.systemState[key];
+    },
+
+    // 4. ฟังก์ชันสำหรับล้างข้อมูล (เผื่อแอดมินต้องการรีเซ็ตระบบ)
+    resetDatabase: function() {
+        if (confirm("คุณต้องการลบข้อมูลทั้งหมดและเริ่มใหม่ใช่หรือไม่?")) {
+            localStorage.removeItem(this.STORAGE_KEY);
+            location.reload();
+        }
+    }
+};
+
+// --- จุดเชื่อมต่อระบบ (Integration Hook) ---
+// แทนที่จะไปแทรกทุกฟังก์ชัน เราใช้การดักจับ (Intercept) ข้อมูล
+// เพื่อให้ทุกครั้งที่มีการเปลี่ยนค่าใน systemState ข้อมูลจะถูกบันทึกอัตโนมัติ
+const handler = {
+    set(target, property, value) {
+        target[property] = value;
+        DatabaseManager.save(); // บันทึกทุกครั้งที่มีการแก้ไขข้อมูล
+        return true;
+    }
+};
+
+// ตรวจสอบว่าระบบเดิมโหลดหรือยัง ถ้ายังให้สร้างตัวแปรเริ่มต้น
+if (!window.systemState) {
+    window.systemState = {
+        usersDB: [],
+        orders: [],
+        slipChecks: [],
+        chatTickets: [],
+        couponUsageLogs: [],
+        adminAuditLogs: [],
+        config: {}
+    };
+}
+
+// เปิดใช้งานระบบบันทึกอัตโนมัติ
+window.systemState = new Proxy(window.systemState, handler);
+
+// โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ
+DatabaseManager.load();
+
+console.log("Persistent Storage System: Active and Ready.");
+// ==============================================================================
+// สิ้นสุด: ระบบจัดเก็บข้อมูลถาวร
+// ==============================================================================
 // ==========================================
 // --- INITIAL SYSTEM LOAD ON WINDOW ---
 // ==========================================
