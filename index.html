@@ -40,10 +40,10 @@
         
         .auth-container { 
             max-width: 450px; 
-            margin: 60px auto; 
+            margin: 40px auto; 
             background: var(--container-bg); 
             border: 2px solid var(--border); 
-            padding: 40px; 
+            padding: 35px; 
             border-radius: 24px; 
             text-align: center; 
             box-shadow: 0 12px 30px rgba(255, 142, 158, 0.1); 
@@ -97,6 +97,12 @@
 
         .main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
         
+        @media (max-width: 992px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .header-store { flex-direction: column; gap: 15px; text-align: center; }
+            .store-logo { flex-direction: column; }
+        }
+
         .sidebar { 
             background: var(--sidebar-bg); 
             padding: 20px; 
@@ -132,12 +138,21 @@
             right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            width: 10px;
-            height: 10px;
+            min-width: 18px;
+            height: 18px;
             background-color: var(--danger);
-            border-radius: 50%;
-            box-shadow: 0 0 8px rgba(255, 107, 107, 0.8);
-            display: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            padding: 0 4px;
+            box-sizing: border-box;
+        }
+        .side-btn .notification-badge {
+            display: none; /* Controlled by JS */
         }
 
         .content-panel { 
@@ -165,7 +180,7 @@
         .upload-dropzone {
             border: 2px dashed #ff8e9e;
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             text-align: center;
             background: rgba(255, 142, 158, 0.02);
             cursor: pointer;
@@ -199,19 +214,21 @@
         }
         .preview-box img {
             max-width: 100%;
-            max-height: 180px;
+            max-height: 150px;
             border-radius: 10px;
             border: 1px solid var(--border);
             object-fit: contain;
         }
 
         .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: inherit; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; justify-content: center;}
-        .btn-block { width: 100%; display: flex; }
+        .btn-block { width: 100%; display: flex; box-sizing: border-box; }
         .btn-primary { background: var(--primary); color: #fff; }
         .btn-danger { background: var(--danger); color: #fff; }
         .btn-success { background: var(--success); color: #fff; }
         .btn-secondary { background: var(--secondary); color: #fff; }
         .btn-orange { background: #ef8300; color: #fff; }
+        .btn-discord { background: var(--discord-blurple); color: #fff; }
+        .btn-discord:hover { background: #4752c4; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-box { background: rgba(255,142,158,0.04); padding: 20px; border-radius: 15px; border: 1px solid var(--border); text-align: center;}
@@ -244,6 +261,7 @@
         .badge-user { background: #e3f2fd; color: #1e88e5; }
         .badge-danger { background: #fdeaea; color: #ea4335; }
         .badge-warning { background: #fffde6; color: #fbbc05; }
+        .badge-info { background: #e0f2f1; color: #004d40; }
 
         .discord-announce-box {
             background: #36393f;
@@ -377,31 +395,70 @@
             border-color: var(--primary);
             background: rgba(255, 142, 158, 0.05);
         }
+
+        /* Modal Styles for Image Slip View */
+        .slip-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+        .slip-modal-content {
+            max-width: 90%;
+            max-height: 80%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .slip-modal-close {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: #fff; font-size: 40px; font-weight: bold;
+            cursor: pointer;
+        }
+        .slip-modal-btn {
+            position: absolute;
+            bottom: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
+<div id="slipModal" class="slip-modal">
+    <span class="slip-modal-close" onclick="closeSlipModal()">&times;</span>
+    <img class="slip-modal-content" id="slipModalImg" src="" alt="Slip Zoom">
+    <a href="#" id="slipDownloadBtn" class="slip-modal-btn" download="slip.png">📥 ดาวน์โหลดรูปภาพ</a>
+</div>
 
 <div id="authSection" class="auth-container">
     <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" class="auth-logo" id="loginLogoImg" alt="Store Logo">
     <h2 id="authTitle" style="margin: 0 0 10px 0; color: var(--primary);">🌸 Kacha ShopBot Panel 🌸</h2>
     <p id="authDesc" style="color: var(--text-dim); font-size: 14px; margin-bottom: 25px;">ระบบจัดการและแผงควบคุมร้านค้าบริการสคริปต์อัตโนมัติ</p>
 
-    <div id="authMenuZone">
-        <button class="btn btn-primary btn-block" style="margin-bottom: 12px;" onclick="switchAuthForm('login')">🔑 เข้าสู่ระบบ</button>
-        <button class="btn btn-secondary btn-block" style="margin-bottom: 12px;" onclick="switchAuthForm('register')">📝 สมัครสมาชิก</button>
-    </div>
-
-    <div id="loginFormZone" style="display: none;">
+    <div id="loginFormZone">
         <div class="form-group">
-            <label>ชื่อผู้ใช้ หรือ อีเมล</label>
+            <label>ชื่อผู้ใช้ หรือ อีเมล (Username / Email)</label>
             <input type="text" id="loginUserOrEmail" class="form-control" placeholder="กรอกชื่อผู้ใช้ หรือ อีเมล">
         </div>
         <div class="form-group">
-            <label>รหัสผ่าน</label>
+            <label>รหัสผ่าน (Password)</label>
             <input type="password" id="loginPassword" class="form-control" placeholder="กรอกรหัสผ่าน">
         </div>
-        <button class="btn btn-primary btn-block" onclick="handleLogin()">เข้าสู่ระบบ</button>
-        <button class="btn btn-block" style="background:none; color:var(--text-dim); margin-top:10px; font-size:13px;" onclick="switchAuthForm('menu')">⬅️ ย้อนกลับ</button>
+        <button class="btn btn-primary btn-block" style="margin-bottom: 12px;" onclick="handleLogin()">🔑 เข้าสู่ระบบ</button>
+        <button class="btn btn-discord btn-block" style="margin-bottom: 15px;" onclick="handleDiscordLogin()">🔮 เข้าสู่ระบบด้วย Discord</button>
+        
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 10px;">
+            <a href="javascript:void(0)" style="color: var(--primary); text-decoration: none; font-weight: 500;" onclick="switchAuthForm('register')">📝 สมัครสมาชิก</a>
+            <a href="javascript:void(0)" style="color: var(--text-dim); text-decoration: none;" onclick="alert('🔒 กรุณาติดต่อแอดมินผ่านดิสคอร์ดเพื่อรีเซ็ตรหัสผ่าน')">ลืมรหัสผ่าน?</a>
+        </div>
     </div>
 
     <div id="registerFormZone" style="display: none;">
@@ -410,26 +467,30 @@
             <input type="text" id="regUsername" class="form-control" placeholder="ภาษาอังกฤษหรือตัวเลข">
         </div>
         <div class="form-group">
-            <label>อีเมลบัญชี</label>
+            <label>อีเมลบัญชี (Email)</label>
             <input type="email" id="regEmail" class="form-control" placeholder="example@email.com">
         </div>
         <div class="form-group">
-            <label>รหัสผ่าน</label>
+            <label>รหัสผ่าน (Password)</label>
             <input type="password" id="regPassword" class="form-control" placeholder="ตั้งรหัสผ่าน">
+        </div>
+        <div class="form-group">
+            <label>ยืนยันรหัสผ่าน (Confirm Password)</label>
+            <input type="password" id="regConfirmPassword" class="form-control" placeholder="กรอกรหัสผ่านอีกครั้ง">
         </div>
         <div class="form-group">
             <label>ชื่อเล่น (Nickname)</label>
             <input type="text" id="regNickname" class="form-control" placeholder="ชื่อเล่นแสดงในระบบ">
         </div>
-        <button class="btn btn-secondary btn-block" onclick="handleRegister()">สมัครสมาชิก</button>
-        <button class="btn btn-block" style="background:none; color:var(--text-dim); margin-top:10px; font-size:13px;" onclick="switchAuthForm('menu')">⬅️ ย้อนกลับ</button>
+        <button class="btn btn-secondary btn-block" onclick="handleRegister()">📝 ยืนยันสมัครสมาชิก</button>
+        <button class="btn btn-block" style="background:none; color:var(--text-dim); margin-top:10px; font-size:13px;" onclick="switchAuthForm('login')">⬅️ ย้อนกลับไปเข้าสู่ระบบ</button>
     </div>
 </div>
 
 <div id="dashboardSection" class="wrapper" style="display: none;">
     <div class="header-store">
         <div class="store-logo">
-            <img id="storeImg" src="" alt="Logo">
+            <img id="storeImg" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" alt="Logo">
             <div>
                 <h1 id="storeNameText" style="margin: 0; font-size: 1.4rem; color: var(--primary);">Kacha ShopBot</h1>
                 <p style="margin: 3px 0 0 0; color: var(--text-dim); font-size: 13px;">ระบบจัดการบอร์ดควบคุมคลังสินค้าอัจฉริยะ</p>
@@ -468,14 +529,15 @@
             
             <div id="sidebarAdminSection" style="display: none;">
                 <div style="font-size: 11px; color: #ef8300; margin-bottom: 10px; font-weight: bold;">🛠️ แผงจัดการระบบ (ADMIN ONLY)</div>
-                <button id="navAdminDashboard" class="side-btn admin-nav" onclick="switchMenu('navAdminDashboard')">📊 ภาพรวมสถิติระบบ</button>
-                <button id="navAdminMembers" class="side-btn admin-nav" onclick="switchMenu('navAdminMembers')">👥 จัดการรายชื่อสมาชิก</button>
+                <button id="navAdminDashboard" class="side-btn admin-nav" onclick="switchMenu('navAdminDashboard')">📊 ภาพรวมสถิติระบบ <span id="badgeDash" class="notification-badge"></span></button>
+                <button id="navAdminMembers" class="side-btn admin-nav" onclick="switchMenu('navAdminMembers')">👥 จัดการรายชื่อสมาชิก <span id="badgeMembers" class="notification-badge"></span></button>
                 <button id="navAdminProducts" class="side-btn admin-nav" onclick="switchMenu('navAdminProducts')">📦 จัดการคลังสินค้า</button>
                 <button id="navAdminCoupons" class="side-btn admin-nav" onclick="switchMenu('navAdminCoupons')">🎟️ ระบบจัดการโค้ดส่วนลด</button>
-                <button id="navAdminDeposits" class="side-btn admin-nav" onclick="switchMenu('navAdminDeposits')">💸 ตรวจสอบและอนุมัติ Slip</button>
-                <button id="navAdminOrders" class="side-btn admin-nav" onclick="switchMenu('navAdminOrders')">🧾 ประวัติสั่งซื้อของลูกค้า</button>
+                <button id="navAdminDeposits" class="side-btn admin-nav" onclick="switchMenu('navAdminDeposits')">💸 อนุมัติ Slip <span id="badgeSlips" class="notification-badge"></span></button>
+                <button id="navAdminOrders" class="side-btn admin-nav" onclick="switchMenu('navAdminOrders')">🧾 ประวัติสั่งซื้อลูกค้า <span id="badgeOrders" class="notification-badge"></span></button>
+                <button id="navAdminPayments" class="side-btn admin-nav" onclick="switchMenu('navAdminPayments')">💳 ประวัติการชำระเงิน</button>
                 <button id="navAdminSettings" class="side-btn admin-nav" onclick="switchMenu('navAdminSettings')">⚙️ ตั้งค่าข้อมูลเว็บไซต์</button>
-                <button id="navAdminLogs" class="side-btn admin-nav" onclick="switchMenu('navAdminLogs')">💬 แชทรับแจ้งปัญหา (Discord สไตล์)</button>
+                <button id="navAdminLogs" class="side-btn admin-nav" onclick="switchMenu('navAdminLogs')">💬 แชทรับแจ้งปัญหา <span id="badgeTickets" class="notification-badge"></span></button>
             </div>
         </div>
 
@@ -491,17 +553,31 @@ let systemState = {
     config: {
         storeName: "Kacha ShopBot Premium V5",
         storeLogo: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150",
-        announcement: "📌 ประกาศเซิร์ฟเวอร์: มีการอัปเดตระบบสคริปต์ควบคุมบอท V1.2 ใหม่ล่าสุดให้มีความเสถียรเพิ่มมากขึ้นเรียบร้อยแล้ว! ลูกค้าเก่ากดโหลดไฟล์ใหม่ที่เมนูประวัติการสั่งซื้อได้เลยครับ",
+        announcement: "📌 ประกาศเซิร์ฟเวอร์: มีการอัปเดตระบบสคริปต์ควบคุมบอท V1.2 ใหม่ล่าสุดให้มีความเสถียรเพิ่มมากขึ้นเรียบร้อยแล้ว!",
         promptpayQrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PromptPay-Mockup-Data",
         truemoneyQrUrl: "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=TrueMoneyQR-Mockup-Data",
         allowAngpao: true,
         allowPromptPay: true,
         allowTrueMoneyQR: true,
-        homepageImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800"
+        homepageImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800",
+        bannerImage: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1000",
+        
+        // Discord Webhook Settings
+        webhookUrl: "https://discord.com/api/webhooks/mock-id/mock-token",
+        notifyNewRegister: true,
+        notifyLogin: true,
+        notifyLogout: false,
+        notifyCreateOrder: true,
+        notifyUploadSlip: true,
+        notifyApproveSlip: true,
+        notifyRejectSlip: true,
+        notifyOpenTicket: true,
+        notifyAnswerTicket: true,
+        notifyConfigChange: true
     },
     usersDB: [
-        { id: 1, username: "NUTTSUME", email: "pcx1tv123@gmail.com", password: "pcx1tv123", nickname: "Natsu Admin", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", role: "admin", status: "Active" },
-        { id: 2, username: "Customer_Alpha", email: "alpha@email.com", password: "password123", nickname: "AlphaUser", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", role: "user", status: "Active" }
+        { id: 1, username: "NUTTSUME", email: "pcx1tv123@gmail.com", password: "pcx1tv123", nickname: "Natsu Admin", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", role: "admin", status: "Active", isOnline: true, discord: { id: "1234567890", name: "Natsu#0001", avatar: "https://cdn.discordapp.com/avatars/1234567890/mock.png" } },
+        { id: 2, username: "Customer_Alpha", email: "alpha@email.com", password: "password123", nickname: "AlphaUser", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", role: "user", status: "Active", isOnline: false, discord: null }
     ],
     currentUser: null,
     currentMode: "user",
@@ -515,22 +591,29 @@ let systemState = {
         { id: 2, name: "Effect", image: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=100" }
     ],
     coupons: [
-        { id: 1, code: "WELCOME50", description: "โค้ดต้อนรับสมาชิกใหม่ ลดทันที 50 บาท", type: "fixed", discount: 50, limitPerUser: 1, maxTotalUsage: 100, currentUsageCount: 0, startDate: "2026-01-01", expiryDate: "2026-12-31", isActive: true, createdAt: "2026-05-30" },
-        { id: 2, code: "KACHA10%", description: "โค้ดพิเศษสุดคุ้ม ลดทันที 10 เปอร์เซ็นต์", type: "percent", discount: 10, limitPerUser: 3, maxTotalUsage: 500, currentUsageCount: 0, startDate: "2026-01-01", expiryDate: "2026-12-31", isActive: true, createdAt: "2026-05-30" }
+        { id: 1, code: "WELCOME50", description: "โค้ดต้อนรับสมาชิกใหม่ ลดทันที 50 บาท", type: "fixed", discount: 50, limitPerUser: 1, maxTotalUsage: 100, currentUsageCount: 2, startDate: "2026-01-01", expiryDate: "2026-12-31", isActive: true, createdAt: "2026-05-30" },
+        { id: 2, code: "KACHA10%", description: "โค้ดพิเศษสุดคุ้ม ลดทันที 10 เปอร์เซ็นต์", type: "percent", discount: 10, limitPerUser: 3, maxTotalUsage: 500, currentUsageCount: 5, startDate: "2026-01-01", expiryDate: "2026-12-31", isActive: true, createdAt: "2026-05-30" }
     ],
     couponUsageLogs: [],
     orders: [
-        { id: "OR-1002", username: "Customer_Alpha", userId: 2, name: "[แอดออน] ระบบควบคุมโมเดลอัตโนมัติ V1.2", price: 250, downloadLink: "https://github.com/example/script-v12", date: "2026-05-28" }
+        { id: "OR-1002", username: "Customer_Alpha", userId: 2, name: "[แอดออน] ระบบควบคุมโมเดลอัตโนมัติ V1.2", price: 250, downloadLink: "https://github.com/example/script-v12", date: "2026-05-28", isReadByAdmin: true }
     ],
     slipChecks: [
-        { id: "SLIP-8812", userId: 2, username: "Customer_Alpha", prodName: "[แอดออน] ระบบควบคุมโมเดลอัตโนมัติ V1.2", gateway: "PromptPay QR", amountPaid: 300, reqAmount: 300, slipImg: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=300", isToday: true, isAmountMatch: true, status: "อนุมัติแล้ว", date: "2026-05-29", couponCodeUsed: "" }
+        { id: "SLIP-8812", userId: 2, username: "Customer_Alpha", prodName: "[แอดออน] ระบบควบคุมโมเดลอัตโนมัติ V1.2", gateway: "PromptPay QR", amountPaid: 300, reqAmount: 300, slipImg: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=300", isToday: true, isAmountMatch: true, status: "อนุมัติแล้ว", date: "2026-05-29", couponCodeUsed: "WELCOME50", discountAmount: 50, totalBefore: 350, totalAfter: 300, uploadTime: "2026-05-29 14:02", adminNotes: "ตรวจสอบผ่าน App ธนาคารแล้วถูกต้อง", approver: "Natsu Admin", isReadByAdmin: true }
     ],
     chatTickets: [
-        { id: "TK-991", userId: 2, username: "Customer_Alpha", status: "กำลังดำเนินการ", isReadByUser: false, messages: [
+        { id: "TK-991", userId: 2, username: "Customer_Alpha", status: "กำลังดำเนินการ", isReadByUser: false, isReadByAdmin: false, messages: [
             { sender: "Customer_Alpha", nickname: "AlphaUser", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100", text: "สวัสดีครับ รบกวนสอบถามการอัปเดตบอทหน่อยครับ", time: "2026-05-29 14:00" },
             { sender: "admin", nickname: "Natsu Admin", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", text: "แอดมินรับทราบเรื่องแล้วครับ กำลังส่งเรื่องตรวจสอบให้ครับผม", time: "2026-05-29 14:05" }
         ]}
     ],
+    // Read status counters for admin badge triggers
+    unreadCounts: {
+        newOrders: 0,
+        newSlips: 0,
+        newTickets: 1,
+        newMembers: 0
+    },
     selectedChannelId: "TK-991",
     selectedPurchaseProduct: null,
     editingProductId: null,
@@ -541,7 +624,17 @@ let systemState = {
 
 const GLOBAL_ADMIN_EMAILS = ["pcx1tv123@gmail.com"];
 
-// --- ฟังก์ชันช่วยเหลือสำหรับจัดการลากและวางไฟล์ (Drag & Drop) และสร้าง Preview ---
+// ==========================================
+// --- DISCORD WEBHOOK INTEGRATION MOCK ---
+// ==========================================
+function sendDiscordWebhook(eventTitle, description) {
+    if (!systemState.config.webhookUrl) return;
+    console.log(`[DISCORD WEBHOOK SENT] Event: ${eventTitle} | Description: ${description}`);
+}
+
+// ==========================================
+// --- DRAG AND DROP / FILE UPLOAD SYSTEM ---
+// ==========================================
 function setupDragAndDrop(zoneId, previewId, callback) {
     setTimeout(() => {
         const zone = document.getElementById(zoneId);
@@ -587,7 +680,6 @@ function handleFileProcess(file, previewId, callback) {
         alert('❌ ขนาดไฟล์ใหญ่เกินไป! ขีดจำกัดต้องไม่เกิน 5MB');
         return;
     }
-
     const reader = new FileReader();
     reader.onload = function(e) {
         const base64Url = e.target.result;
@@ -601,35 +693,64 @@ function handleFileProcess(file, previewId, callback) {
     reader.readAsDataURL(file);
 }
 
-function updateNotificationBadge() {
-    if (!systemState.currentUser || systemState.currentUser.role === 'admin') {
-        document.getElementById('unreadDot').style.display = 'none';
-        return;
-    }
-    
-    let hasUnread = systemState.chatTickets.some(t => {
-        if (t.userId === systemState.currentUser.id && t.messages.length > 0) {
-            let lastMsg = t.messages[t.messages.length - 1];
-            return lastMsg.sender === 'admin' && t.isReadByUser === false;
-        }
-        return false;
-    });
+// ==========================================
+// --- SLIP VIEWING MODAL UTILITIES ---
+// ==========================================
+function viewSlipZoom(url) {
+    const modal = document.getElementById('slipModal');
+    const modalImg = document.getElementById('slipModalImg');
+    const downloadBtn = document.getElementById('slipDownloadBtn');
+    modal.style.display = "flex";
+    modalImg.src = url;
+    downloadBtn.href = url;
+}
+function closeSlipModal() {
+    document.getElementById('slipModal').style.display = "none";
+}
 
-    if (hasUnread) {
-        document.getElementById('unreadDot').style.display = 'block';
-    } else {
-        document.getElementById('unreadDot').style.display = 'none';
+// ==========================================
+// --- ADMINISTRATIVE & USER NOTIFICATIONS ---
+// ==========================================
+function updateNotificationBadges() {
+    // User Section
+    if (systemState.currentUser && systemState.currentUser.role !== 'admin') {
+        let hasUnread = systemState.chatTickets.some(t => {
+            if (t.userId === systemState.currentUser.id && t.messages.length > 0) {
+                let lastMsg = t.messages[t.messages.length - 1];
+                return lastMsg.sender === 'admin' && t.isReadByUser === false;
+            }
+            return false;
+        });
+        document.getElementById('unreadDot').style.display = hasUnread ? 'block' : 'none';
+        if(hasUnread) document.getElementById('unreadDot').innerText = "!";
+    }
+
+    // Admin Badges
+    if (systemState.currentUser && systemState.currentUser.role === 'admin') {
+        const totalAlerts = systemState.unreadCounts.newOrders + systemState.unreadCounts.newSlips + systemState.unreadCounts.newTickets + systemState.unreadCounts.newMembers;
+        
+        const bDash = document.getElementById('badgeDash');
+        const bMembers = document.getElementById('badgeMembers');
+        const bSlips = document.getElementById('badgeSlips');
+        const bOrders = document.getElementById('badgeOrders');
+        const bTickets = document.getElementById('badgeTickets');
+
+        if(bDash) { bDash.style.display = totalAlerts > 0 ? 'flex' : 'none'; bDash.innerText = totalAlerts; }
+        if(bMembers) { bMembers.style.display = systemState.unreadCounts.newMembers > 0 ? 'flex' : 'none'; bMembers.innerText = systemState.unreadCounts.newMembers; }
+        if(bSlips) { bSlips.style.display = systemState.unreadCounts.newSlips > 0 ? 'flex' : 'none'; bSlips.innerText = systemState.unreadCounts.newSlips; }
+        if(bOrders) { bOrders.style.display = systemState.unreadCounts.newOrders > 0 ? 'flex' : 'none'; bOrders.innerText = systemState.unreadCounts.newOrders; }
+        if(bTickets) { bTickets.style.display = systemState.unreadCounts.newTickets > 0 ? 'flex' : 'none'; bTickets.innerText = systemState.unreadCounts.newTickets; }
     }
 }
 
+// ==========================================
+// --- AUTHENTICATION FLOW MANAGEMENT ---
+// ==========================================
 function switchAuthForm(formType) {
-    document.getElementById('authMenuZone').style.display = 'none';
     document.getElementById('loginFormZone').style.display = 'none';
     document.getElementById('registerFormZone').style.display = 'none';
-
-    if (formType === 'menu') {
-        document.getElementById('authMenuZone').style.display = 'block';
-    } else if (formType === 'login') {
+    
+    if (formType === 'login') {
         document.getElementById('loginFormZone').style.display = 'block';
     } else if (formType === 'register') {
         document.getElementById('registerFormZone').style.display = 'block';
@@ -640,486 +761,492 @@ function handleRegister() {
     const user = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const pass = document.getElementById('regPassword').value;
+    const confirmPass = document.getElementById('regConfirmPassword').value;
     const nick = document.getElementById('regNickname').value.trim();
-
-    if(!user || !email || !pass || !nick) return alert("❌ กรุณากรอกข้อมูลจำเป็นให้ครบถ้วน");
-    if(systemState.usersDB.some(u => u.username.toLowerCase() === user.toLowerCase() || u.email.toLowerCase() === email.toLowerCase())) {
-        return alert("❌ ชื่อผู้ใช้หรืออีเมลนี้ได้รับการลงทะเบียนแล้ว");
+    
+    if(!user || !email || !pass || !confirmPass || !nick) {
+        return alert("❌ กรุณากรอกข้อมูลจำต้องกรอกให้ครบทุกช่อง");
     }
-
-    systemState.usersDB.push({
+    if(pass !== confirmPass) {
+        return alert("❌ รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
+    }
+    if(systemState.usersDB.some(u => u.username.toLowerCase() === user.toLowerCase())) {
+        return alert("❌ ชื่อผู้ใช้นี้ (Username) ถูกใช้ไปแล้วในระบบ");
+    }
+    if(systemState.usersDB.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        return alert("❌ อีเมลนี้ได้รับการลงทะเบียนเรียบร้อยแล้ว");
+    }
+    
+    const newMember = {
         id: systemState.usersDB.length + 1,
-        username: user, email: email, password: pass, nickname: nick,
+        username: user,
+        email: email,
+        password: pass,
+        nickname: nick,
         avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
-        role: "user", status: "Active"
-    });
-    alert("🎉 สมัครสมาชิกเสร็จสมบูรณ์ กรุณาเข้าสู่ระบบ");
+        role: "user",
+        status: "Active",
+        isOnline: false,
+        discord: null
+    };
+    
+    systemState.usersDB.push(newMember);
+    systemState.unreadCounts.newMembers++;
+    
+    if (systemState.config.notifyNewRegister) {
+        sendDiscordWebhook("🟢 สมาชิกสมัครใหม่", `คุณ ${nick} (@${user}) ได้สมัครสมาชิกเข้าสู่ระบบเรียบร้อยแล้ว เวลา: ${new Date().toLocaleString('th-TH')}`);
+    }
+    
+    alert("🎉 สมัครสมาชิกเสร็จสมบูรณ์! ระบบจะนำท่านไปหน้าเข้าสู่ระบบ");
     switchAuthForm('login');
 }
 
 function handleLogin() {
     const input = document.getElementById('loginUserOrEmail').value.trim();
     const pass = document.getElementById('loginPassword').value;
-
-    if(!input || !pass) return alert("❌ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
-
+    
+    if(!input || !pass) return alert("❌ กรุณากรอกชื่อผู้ใช้/อีเมล และรหัสผ่าน");
+    
     let user = systemState.usersDB.find(u => (u.username === input || u.email === input) && u.password === pass);
-
+    
     if(!user) {
         if (GLOBAL_ADMIN_EMAILS.includes(input) && pass === "pcx1tv123") {
-            user = { id: 1, username: "NUTTSUME", email: "pcx1tv123@gmail.com", password: "pcx1tv123", nickname: "Natsu Admin", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100", role: "admin", status: "Active" };
+            user = systemState.usersDB.find(u => u.id === 1);
         } else {
-            return alert("❌ ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง หรือรหัสผ่านผิดพลาด");
+            return alert("❌ ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง รหัสผ่านผิดพลาด หรือไม่มีผู้ใช้นี้");
         }
     }
-
+    
     if(user.status === "Banned") {
-        return alert("❌ บัญชีนี้ถูกระงับการใช้งานถาวรโดยผู้ดูแลระบบ");
+        return alert("❌ บัญชีนี้ถูกระงับการใช้งานอย่างถาวรโดยผู้ดูแลระบบ");
     }
-
+    
+    user.isOnline = true;
     systemState.currentUser = user;
+    
+    if (systemState.config.notifyLogin) {
+        sendDiscordWebhook("🔑 สมาชิกเข้าสู่ระบบ", `ผู้ใช้: ${user.nickname} (@${user.username}) ได้เข้าสู่ระบบสำเร็จ`);
+    }
+    
     document.getElementById('authSection').style.display = 'none';
     document.getElementById('dashboardSection').style.display = 'grid';
     initDashboard();
 }
 
+function handleDiscordLogin() {
+    // Simulate OAuth2 Flow
+    const mockDiscordId = "DISC-" + Math.floor(100000 + Math.random() * 900000);
+    const mockDiscordName = "DiscordUser_" + Math.floor(10 + Math.random() * 89);
+    const mockAvatar = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
+    
+    // Check if any existing user has linked this discord account
+    let foundUser = systemState.usersDB.find(u => u.discord && u.discord.id === mockDiscordId);
+    
+    if (!foundUser) {
+        // First time discord login -> Auto create account
+        foundUser = {
+            id: systemState.usersDB.length + 1,
+            username: mockDiscordName.toLowerCase(),
+            email: mockDiscordName.toLowerCase() + "@discord.com",
+            password: "dc-" + Math.random().toString(36).substring(3),
+            nickname: mockDiscordName,
+            avatar: mockAvatar,
+            role: "user",
+            status: "Active",
+            isOnline: true,
+            discord: {
+                id: mockDiscordId,
+                name: mockDiscordName,
+                avatar: mockAvatar
+            }
+        };
+        systemState.usersDB.push(foundUser);
+        systemState.unreadCounts.newMembers++;
+        if (systemState.config.notifyNewRegister) {
+            sendDiscordWebhook("🔮 สมาชิกสมัครใหม่ (Discord)", `ผูกบัญชีอัตโนมัติ: บัญชีดิสคอร์ด ${mockDiscordName} เข้าสู่ระบบเป็นครั้งแรก`);
+        }
+    } else {
+        foundUser.isOnline = true;
+    }
+    
+    systemState.currentUser = foundUser;
+    if (systemState.config.notifyLogin) {
+        sendDiscordWebhook("🔮 สมาชิกเข้าสู่ระบบด้วย Discord", `ผู้ใช้: ${foundUser.nickname} ได้เข้าสู่ระบบผ่าน Discord OAuth2`);
+    }
+    
+    alert(`🔮 เชื่อมต่อ Discord สำเร็จ! ยินดีต้อนรับคุณ ${foundUser.nickname}`);
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('dashboardSection').style.display = 'grid';
+    initDashboard();
+}
+
+function toggleDiscordLink() {
+    if (systemState.currentUser.discord) {
+        if (confirm("คุณแน่ใจหรือไม่ที่จะยกเลิกการเชื่อมต่อบัญชี Discord?")) {
+            systemState.currentUser.discord = null;
+            alert("เลิกเชื่อมต่อเรียบร้อยแล้ว");
+            switchMenu('navProfile');
+        }
+    } else {
+        systemState.currentUser.discord = {
+            id: "DISC-" + Math.floor(100000 + Math.random() * 900000),
+            name: systemState.currentUser.username + "#Mock",
+            avatar: systemState.currentUser.avatar
+        };
+        alert("🔮 เชื่อมต่อบัญชี Discord จำลองเข้ากับระบบสำเร็จ!");
+        switchMenu('navProfile');
+    }
+}
+
 function handleLogout() {
+    if (systemState.currentUser) {
+        systemState.currentUser.isOnline = false;
+        if (systemState.config.notifyLogout) {
+            sendDiscordWebhook("🚪 สมาชิกออกจากระบบ", `ผู้ใช้: ${systemState.currentUser.nickname} ออกจากระบบแล้ว`);
+        }
+    }
     systemState.currentUser = null;
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('dashboardSection').style.display = 'none';
 }
 
 function initDashboard() {
-    syncHeaderStats();
+    // Apply Configurations
+    document.getElementById('storeImg').src = systemState.config.storeLogo;
+    document.getElementById('storeNameText').innerText = systemState.config.storeName;
+    
+    // User Panel Widgets
+    document.getElementById('webUsername').innerText = systemState.currentUser.nickname;
+    document.getElementById('webUserAvatar').src = systemState.currentUser.avatar;
+    
     if(systemState.currentUser.role === 'admin') {
         document.getElementById('webUserTag').innerHTML = `<span class="badge badge-admin">ผู้ดูแลระบบ</span>`;
         document.getElementById('adminToggleZone').style.display = 'block';
     } else {
-        document.getElementById('webUserTag').innerHTML = `<span class="badge badge-user">สมาชิกทั่วไป</span>`;
+        document.getElementById('webUserTag').innerHTML = `<span class="badge badge-user">ลูกค้าทั่วไป</span>`;
         document.getElementById('adminToggleZone').style.display = 'none';
+        systemState.currentMode = "user";
     }
-    systemState.currentMode = "user";
-    document.getElementById('sidebarUserSection').style.display = 'block';
-    document.getElementById('sidebarAdminSection').style.display = 'none';
-    switchMenu('navHome');
-    updateNotificationBadge();
+    
+    document.getElementById('sidebarAdminSection').style.display = (systemState.currentMode === 'admin') ? 'block' : 'none';
+    document.getElementById('sidebarUserSection').style.display = (systemState.currentMode === 'admin') ? 'none' : 'block';
+    
+    switchMenu(systemState.currentMode === 'admin' ? 'navAdminDashboard' : 'navHome');
+    updateNotificationBadges();
 }
 
 function toggleAdminMode() {
-    const btn = document.getElementById('adminToggleButton');
-    if (systemState.currentMode === "user") {
+    if(systemState.currentUser.role !== 'admin') return;
+    if(systemState.currentMode === "user") {
         systemState.currentMode = "admin";
-        btn.innerText = "👤 สลับกลับหน้าร้านค้า";
-        document.getElementById('sidebarUserSection').style.display = 'none';
-        document.getElementById('sidebarAdminSection').style.display = 'block';
-        switchMenu('navAdminDashboard');
+        document.getElementById('adminToggleButton').innerText = "🧑‍💻 สลับเข้าโหมดลูกค้า";
     } else {
         systemState.currentMode = "user";
-        btn.innerText = "🛠️ สลับเข้าโหมด Admin";
-        document.getElementById('sidebarUserSection').style.display = 'block';
-        document.getElementById('sidebarAdminSection').style.display = 'none';
-        switchMenu('navHome');
+        document.getElementById('adminToggleButton').innerText = "🛠️ สลับเข้าโหมด Admin";
     }
-    updateNotificationBadge();
+    initDashboard();
 }
 
-function syncHeaderStats() {
-    if(!systemState.currentUser) return;
-    document.getElementById('storeNameText').innerText = systemState.config.storeName;
-    document.getElementById('storeImg').src = systemState.config.storeLogo;
-    document.getElementById('loginLogoImg').src = systemState.config.storeLogo;
-    document.getElementById('webUsername').innerText = systemState.currentUser.nickname;
-    document.getElementById('webUserAvatar').src = systemState.currentUser.avatar;
-}
-
+// ==========================================
+// --- VIEW SWITCHER & RENDER CODES ---
+// ==========================================
 function switchMenu(menuId) {
-    document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById(menuId);
-    if(btn) btn.classList.add('active');
-
-    if(menuId === 'navHome') renderHomeView();
-    if(menuId === 'navHistory') renderHistoryView();
-    if(menuId === 'navProfile') renderProfileView();
-    if(menuId === 'navTicket') renderTicketView();
+    const btns = document.querySelectorAll('.side-btn');
+    btns.forEach(b => b.classList.remove('active'));
     
-    if(menuId === 'navAdminDashboard') renderAdminDashboard();
-    if(menuId === 'navAdminMembers') renderAdminMembersView();
-    if(menuId === 'navAdminProducts') renderAdminProductsView();
-    if(menuId === 'navAdminCoupons') renderAdminCouponsView();
-    if(menuId === 'navAdminDeposits') renderAdminDepositsView();
-    if(menuId === 'navAdminOrders') renderAdminOrdersView();
-    if(menuId === 'navAdminSettings') renderAdminSettingsView();
-    if(menuId === 'navAdminLogs') renderAdminLogsView();
+    const targetBtn = document.getElementById(menuId);
+    if(targetBtn) targetBtn.classList.add('active');
+    
+    const content = document.getElementById('mainContent');
+    updateNotificationBadges();
+
+    switch(menuId) {
+        case 'navHome':
+            renderHomeView(content);
+            break;
+        case 'navHistory':
+            renderHistoryView(content);
+            break;
+        case 'navProfile':
+            renderProfileView(content);
+            break;
+        case 'navTicket':
+            systemState.chatTickets.forEach(t => { if(t.userId === systemState.currentUser.id) t.isReadByUser = true; });
+            renderTicketView(content);
+            break;
+            
+        // Admin Navigation Links
+        case 'navAdminDashboard':
+            renderAdminDashboardView(content);
+            break;
+        case 'navAdminMembers':
+            systemState.unreadCounts.newMembers = 0;
+            renderAdminMembersView(content);
+            break;
+        case 'navAdminProducts':
+            renderAdminProductsView(content);
+            break;
+        case 'navAdminCoupons':
+            renderAdminCouponsView(content);
+            break;
+        case 'navAdminDeposits':
+            systemState.unreadCounts.newSlips = 0;
+            renderAdminDepositsView(content);
+            break;
+        case 'navAdminOrders':
+            systemState.unreadCounts.newOrders = 0;
+            renderAdminOrdersView(content);
+            break;
+        case 'navAdminPayments':
+            renderAdminPaymentsView(content);
+            break;
+        case 'navAdminSettings':
+            renderAdminSettingsView(content);
+            break;
+        case 'navAdminLogs':
+            systemState.unreadCounts.newTickets = 0;
+            renderAdminLogsView(content);
+            break;
+    }
 }
 
 // ==========================================
-// --- ฟังก์ชันฝั่งผู้ใช้ (USER SHOP ZONE) ---
+// --- USER VIEWS RENDERING ---
 // ==========================================
-function renderHomeView() {
+function renderHomeView(el) {
     let html = `
         <div class="discord-announce-box">
             <div class="discord-announce-header">
-                <span>ประกาศ</span> 📣 ข้อมูลประชาสัมพันธ์ล่าสุดจากร้านค้า
+                <div>📢 ข่าวประกาศของร้านค้า</div>
+                <span>บอร์ดประกาศ</span>
             </div>
-            <div style="font-size:14px; line-height:1.5;">${systemState.config.announcement}</div>
+            <div>${systemState.config.announcement}</div>
         </div>
-    `;
-
-    if(systemState.config.homepageImage) {
-        html += `<div style="text-align:center; margin-bottom:25px;"><img src="${systemState.config.homepageImage}" style="max-width:100%; max-height:280px; border-radius:16px; object-fit:cover; border:1px solid var(--border);"></div>`;
-    }
-
-    html += `
-        <h2 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;">🌸 หมวดหมู่บริการสินค้าสคริปต์</h2>
-        <div style="display:flex; gap:12px; margin-bottom:30px; flex-wrap:wrap;">
-            <button class="btn btn-secondary" onclick="filterHomeProducts('all')">📂 ทั้งหมด (${systemState.products.length})</button>
+        <div style="margin-bottom:25px; border-radius:15px; overflow:hidden;">
+            <img src="${systemState.config.homepageImage}" style="width:100%; max-height:260px; object-fit:cover;" alt="Banner">
+        </div>
+		
+        <h2 style="margin-bottom:20px; color:var(--primary);">📦 คลังรายการสินค้าพร้อมจำหน่าย</h2>
+        <div class="product-grid">
     `;
     
-    systemState.categories.forEach(c => {
-        let count = systemState.products.filter(p => p.category === c.name).length;
-        html += `<button class="btn" style="background:#fff; border:1px solid var(--border); color:var(--text-main);" onclick="filterHomeProducts('${c.name}')">🏷️ ${c.name} (${count})</button>`;
+    systemState.products.forEach(p => {
+        html += `
+            <div class="product-card">
+                <div>
+                    <img src="${p.image}" alt="Product Image">
+                    <h3 style="margin:5px 0; font-size:16px;">${p.name}</h3>
+                    <p style="color:var(--text-dim); font-size:12px; margin-bottom:15px;">${p.desc}</p>
+                </div>
+                <div>
+                    <div style="font-size:18px; font-weight:bold; color:var(--primary); margin-bottom:10px;">฿${p.price.toLocaleString()}</div>
+                    <button class="btn btn-primary btn-block" onclick="openPurchaseModal(${p.id})">🛒 ซื้อสินค้ารายการนี้</button>
+                </div>
+            </div>
+        `;
     });
     
-    html += `</div>
-        <h2 style="color:var(--primary); margin-bottom:15px;">📦 รายการสินค้าพร้อมจัดจำหน่าย</h2>
-        <div class="product-grid" id="homeProductGrid">`;
-        
-    html += getProductCardsHtml(systemState.products);
     html += `</div>`;
-    
-    document.getElementById('mainContent').innerHTML = html;
+    el.innerHTML = html;
 }
 
-function filterHomeProducts(catName) {
-    const grid = document.getElementById('homeProductGrid');
-    if(!grid) return;
-    if(catName === 'all') {
-        grid.innerHTML = getProductCardsHtml(systemState.products);
-    } else {
-        let filtered = systemState.products.filter(p => p.category === catName);
-        grid.innerHTML = getProductCardsHtml(filtered);
-    }
-}
-
-function getProductCardsHtml(prodList) {
-    if(prodList.length === 0) return `<p style="color:var(--text-dim); text-align:center; grid-column: 1/-1; padding:40px 0;">🚫 ยังไม่มีสินค้าบริการในหมวดหมู่นี้</p>`;
-    
-    return prodList.map(p => `
-        <div class="product-card">
-            <div>
-                <img src="${p.image || 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=400'}" alt="Product Image">
-                <h3 style="margin: 0 0 8px 0; font-size:16px; color:var(--text-main);">${p.name}</h3>
-                <p style="margin: 0 0 15px 0; font-size:12px; color:var(--text-dim); line-height:1.4;">${p.desc}</p>
-            </div>
-            <div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span class="badge badge-user">${p.category || 'ทั่วไป'}</span>
-                    <b style="font-size:18px; color:var(--primary);">${p.price} ฿</b>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="openPurchaseModal(${p.id})">🛒 สั่งซื้อสินค้าชิ้นนี้</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function openPurchaseModal(pid) {
-    let p = systemState.products.find(x => x.id === pid);
+function openPurchaseModal(prodId) {
+    const p = systemState.products.find(x => x.id === prodId);
     if(!p) return;
-    
     systemState.selectedPurchaseProduct = p;
-    systemState.currentSelectedGateway = 'pp';
-    systemState.tempUploadedImageUrl = "";
+    systemState.tempUploadedImageUrl = ""; // reset
     
-    let html = `
-        <h2 style="margin-top:0; color:var(--primary);">🛒 ดำเนินการสั่งซื้อ / แจ้งโอนสลิปหลักฐานเงิน</h2>
-        <div style="display:grid; grid-template-columns:140px 1fr; gap:15px; background:#fffcfc; border:1px solid var(--border); padding:15px; border-radius:12px; margin-bottom:20px;">
-            <img src="${p.image}" style="width:100%; height:90px; object-fit:cover; border-radius:8px;">
-            <div>
-                <h3 style="margin:0 0 5px 0;">${p.name}</h3>
-                <p style="margin:0; font-size:13px; color:var(--text-dim);">${p.desc}</p>
-                <div style="font-size:16px; font-weight:bold; color:var(--primary); margin-top:8px;">ราคาต้นฉบับ: ${p.price} บาท</div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>🎟️ ใช้โค้ดคูปองส่วนลดราคา (ถ้ามี)</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="orderCouponInput" class="form-control" placeholder="กรอกชื่อโค้ดลดราคา เช่น WELCOME50" style="text-transform: uppercase;">
-                <button class="btn btn-secondary" onclick="applyDiscountToModal(${p.price})">ตรวจสอบสิทธิ์</button>
-            </div>
-            <div id="couponStatusMessage" style="margin-top:6px; font-size:13px; font-weight:bold;"></div>
-        </div>
-        <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px; text-align:right;">
-            <div style="font-size:14px; color:var(--text-dim);">ยอดจัดเก็บสุทธิที่ต้องชำระเงินจริง:</div>
-            <div style="font-size:26px; font-weight:bold; color:var(--success);" id="finalPriceText">${p.price} ฿</div>
-        </div>
-        <h3 style="margin-bottom:12px;">💳 ช่องทางการชำระเงินและแนบหลักฐานสลิป</h3>
-    `;
-    
-    if(systemState.config.allowPromptPay) {
-        html += `
-            <div id="gw-pp" class="payment-gateway-box selected" onclick="selectGateway('pp')">
-                <strong>📸 ชำระเงินผ่านระบบ PromptPay QR-Bot</strong>
-                <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-dim);">สแกนจ่ายผ่านคิวอาร์โค้ดแล้วส่งรูปสลิปเพื่อขออนุมัติอัตโนมัติ</p>
-                <div style="text-align:center; margin-top:10px;">
-                    <img src="${systemState.config.promptpayQrUrl}" style="width:180px; height:180px; border:1px solid var(--border); padding:5px; background:white;">
+    const content = document.getElementById('mainContent');
+    content.innerHTML = `
+        <div style="max-width:600px; margin:auto; background:#fff; padding:25px; border:1px solid var(--border); border-radius:15px;">
+            <h2 style="color:var(--primary); margin-top:0;">💳 ขั้นตอนการยืนยันคำสั่งซื้อ</h2>
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <img src="${p.image}" style="width:100px; height:100px; object-fit:cover; border-radius:10px;">
+                <div>
+                    <h4>${p.name}</h4>
+                    <p style="color:var(--text-dim); font-size:12px;">ยอดชำระที่จำเป็น: <b style="color:var(--primary); font-size:16px;">฿${p.price}</b></p>
                 </div>
             </div>
-        `;
-    }
-    if(systemState.config.allowTrueMoneyQR) {
-        html += `
-            <div id="gw-tm" class="payment-gateway-box ${!systemState.config.allowPromptPay ? 'selected':''}" onclick="selectGateway('tm')">
-                <strong>💳 ชำระผ่าน TrueMoney Wallet (QR-Code)</strong>
-                <p style="margin:4px 0 0 0; font-size:12px; color:var(--text-dim);">สแกนจ่ายเงินผ่านแอป TrueMoney Wallet</p>
-                <div style="text-align:center; margin-top:10px;">
-                    <img src="${systemState.config.truemoneyQrUrl}" style="width:180px; height:180px; border:1px solid var(--border); padding:5px; background:white;">
+            
+            <div class="form-group">
+                <label>🎟️ กรอกโค้ดส่วนลด (ถ้ามี)</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="couponCodeInput" class="form-control" placeholder="ระบุ Code ส่วนลดที่นี่">
+                    <button class="btn btn-secondary" onclick="applyCouponToPurchase()">ตรวจสอบสิทธิ์</button>
+                </div>
+                <div id="couponMessageZone" style="margin-top:5px; font-size:12px;"></div>
+            </div>
+            
+            <label style="font-weight:bold; display:block; margin-bottom:10px;">เลือกช่องทางชำระเงิน</label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                <div class="payment-gateway-box selected" id="gw_pp" onclick="selectGateway('pp')">
+                    <b>PromptPay QR-Code</b><br><span style="font-size:11px; color:var(--text-dim);">ไม่มีค่าธรรมเนียม</span>
+                </div>
+                <div class="payment-gateway-box" id="gw_tm" onclick="selectGateway('tm')">
+                    <b>TrueMoney QR-Code</b><br><span style="font-size:11px; color:var(--text-dim);">เช็กยอดทันที</span>
                 </div>
             </div>
-        `;
-    }
-
-    html += `
-        <div class="form-group" style="margin-top:20px;">
-            <label style="color:var(--primary); font-weight:bold;">📤 แนบรูปภาพไฟล์หลักฐานสลิปโอนเงิน (Slip Upload Area)</label>
-            <div class="upload-dropzone" id="slipDropzone">
-                <span class="dz-text">📁 ลากรูปสลิปมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์รูป</span>
-                <span class="dz-hint">(ขนาดไฟล์ภาพต้องไม่เกิน 5MB)</span>
-                <input type="file" accept="image/*" onchange="handleFileSelect(event, 'slipPreview', (url)=>systemState.tempUploadedImageUrl = url)">
+            
+            <div style="text-align:center; margin-bottom:20px; background:#fafafa; padding:15px; border-radius:10px;">
+                <p style="font-size:13px; color:var(--danger); font-weight:bold;">สแกนคิวอาร์โค้ดด้านล่างเพื่อโอนเงินยอด <span id="finalPriceText">฿${p.price}</span></p>
+                <img id="gatewayQrImg" src="${systemState.config.promptpayQrUrl}" style="width:180px; height:180px; border:1px solid #ccc; border-radius:10px;">
             </div>
-            <div class="preview-box" id="slipPreview"></div>
-        </div>
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button class="btn btn-success" style="flex-grow:1;" onclick="submitOrderPurchase()">🚀 ยืนยันคำสั่งซื้อและส่งสลิป</button>
-            <button class="btn" style="background:#eee;" onclick="renderHomeView()">❌ ยกเลิก</button>
+
+            <div class="form-group">
+                <label>🧾 อัปเดตอัปโหลดไฟล์สลิปการโอนเงิน (ห้ามวาง URL รูปภาพ)</label>
+                <div class="upload-dropzone" id="slipDropzone">
+                    <span class="dz-text">📁 ลากไฟล์สลิปมาวางที่นี่ หรือ คลิกเลือกไฟล์จากเครื่อง</span>
+                    <p class="dz-hint">รองรับเฉพาะ JPG, PNG ขนาดไม่เกิน 5MB</p>
+                    <input type="file" accept="image/*" onchange="handleFileSelect(event, 'slipPreview', (url) => { systemState.tempUploadedImageUrl = url; })">
+                </div>
+                <div class="preview-box" id="slipPreview"></div>
+            </div>
+            
+            <button class="btn btn-success btn-block" style="margin-top:15px;" onclick="submitPurchaseRequest()">✔️ แจ้งหลักฐานส่งสลิปชำระเงิน</button>
+            <button class="btn btn-block" style="background:none; color:var(--text-dim); margin-top:10px;" onclick="switchMenu('navHome')">❌ ยกเลิกรายการสั่งซื้อ</button>
         </div>
     `;
-    
-    document.getElementById('mainContent').innerHTML = html;
-    setupDragAndDrop('slipDropzone', 'slipPreview', (url) => systemState.tempUploadedImageUrl = url);
-    if(!systemState.config.allowPromptPay && systemState.config.allowTrueMoneyQR) {
-        systemState.currentSelectedGateway = 'tm';
-    }
+    setupDragAndDrop('slipDropzone', 'slipPreview', (url) => { systemState.tempUploadedImageUrl = url; });
 }
 
-function selectGateway(gw) {
-    systemState.currentSelectedGateway = gw;
-    document.querySelectorAll('.payment-gateway-box').forEach(b => b.classList.remove('selected'));
-    const activeBox = document.getElementById('gw-' + gw);
-    if(activeBox) activeBox.classList.add('selected');
-}
-
-function applyDiscountToModal(originalPrice) {
-    const inputCode = document.getElementById('orderCouponInput').value.trim().toUpperCase();
-    const msgDiv = document.getElementById('couponStatusMessage');
-    const finalPriceText = document.getElementById('finalPriceText');
+function selectGateway(type) {
+    systemState.currentSelectedGateway = type;
+    document.getElementById('gw_pp').classList.remove('selected');
+    document.getElementById('gw_tm').classList.remove('selected');
     
-    if(!inputCode) {
-        msgDiv.style.color = "var(--danger)";
-        msgDiv.innerText = "❌ กรุณากรอกรหัสโค้ดก่อนทำการตรวจสอบค่ะ";
-        return;
-    }
-    
-    let cp = systemState.coupons.find(c => c.code === inputCode);
-    if(!cp) {
-        msgDiv.style.color = "var(--danger)";
-        msgDiv.innerText = "❌ ไม่พบรหัสโค้ดส่วนลดนี้ในระบบ";
-        return;
-    }
-    
-    if(!cp.isActive) {
-        msgDiv.style.color = "var(--danger)";
-        msgDiv.innerText = "❌ โค้ดส่วนลดนี้ถูกปิดใช้งานชั่วคราวโดยผู้ดูแลระบบ";
-        return;
-    }
-    
-    let nowStr = new Date().toISOString().split('T')[0];
-    if(cp.startDate && nowStr < cp.startDate) {
-        msgDiv.style.color = "var(--danger)";
-        msgDiv.innerText = `❌ โค้ดส่วนลดนี้ยังไม่เริ่มใช้งาน (เริ่มใช้งาน ${cp.startDate})`;
-        return;
-    }
-    if(cp.expiryDate && nowStr > cp.expiryDate) {
-        msgDiv.style.color = "var(--danger)";
-        msgDiv.innerText = "❌ ขออภัย! โค้ดส่วนลดนี้หมดอายุการใช้งานแล้ว";
-        return;
-    }
-    
-    if(cp.maxTotalUsage !== undefined && cp.maxTotalUsage !== null && cp.maxTotalUsage !== -1) {
-        if(cp.currentUsageCount >= cp.maxTotalUsage) {
-            msgDiv.style.color = "var(--danger)";
-            msgDiv.innerText = "❌ ขออภัย! โค้ดส่วนลดนี้ถูกใช้งานครบตามจำนวนสิทธิ์รวมทั้งหมดแล้ว";
-            return;
-        }
-    }
-    
-    let myUsageCount = systemState.couponUsageLogs.filter(log => log.username === systemState.currentUser.username && log.code === inputCode).length;
-    if(cp.limitPerUser !== undefined && cp.limitPerUser !== null && cp.limitPerUser !== -1) {
-        if(myUsageCount >= cp.limitPerUser) {
-            msgDiv.style.color = "var(--danger)";
-            msgDiv.innerText = `❌ คุณใช้สิทธิ์โค้ดนี้ครบกำหนดแล้ว (${cp.limitPerUser} ครั้ง/คน) ไม่สามารถใช้ซ้ำได้อีก`;
-            return;
-        }
-    }
-    
-    let discountAmount = 0;
-    if(cp.type === 'percent') {
-        discountAmount = Math.floor((originalPrice * cp.discount) / 100);
+    if(type === 'pp') {
+        document.getElementById('gw_pp').classList.add('selected');
+        document.getElementById('gatewayQrImg').src = systemState.config.promptpayQrUrl;
     } else {
-        discountAmount = cp.discount;
+        document.getElementById('gw_tm').classList.add('selected');
+        document.getElementById('gatewayQrImg').src = systemState.config.truemoneyQrUrl;
     }
-    
-    let finalPrice = originalPrice - discountAmount;
-    if(finalPrice < 0) finalPrice = 0;
-    
-    msgDiv.style.color = "var(--success)";
-    let typeUnit = cp.type === 'percent' ? '%' : 'บาท';
-    msgDiv.innerText = `🎉 ใช้โค้ดสำเร็จ! [${cp.code}] ลดคุ้มค่าไป ${cp.discount} ${typeUnit} (ลดเงินสุทธิ -${discountAmount} บาท)`;
-    finalPriceText.innerText = `${finalPrice} ฿`;
-    finalPriceText.setAttribute('data-discounted-value', finalPrice);
-    finalPriceText.setAttribute('data-used-coupon', cp.code);
-    finalPriceText.setAttribute('data-cut-amount', discountAmount);
 }
 
-function submitOrderPurchase() {
+function applyCouponToPurchase() {
+    const code = document.getElementById('couponCodeInput').value.trim().toUpperCase();
+    const msgZone = document.getElementById('couponMessageZone');
     const p = systemState.selectedPurchaseProduct;
-    if(!p) return;
+    if(!code) return;
     
+    const cp = systemState.coupons.find(c => c.code.toUpperCase() === code && c.isActive);
+    if(!cp) {
+        msgZone.innerHTML = `<span style="color:var(--danger)">❌ คูปองนี้ใช้งานไม่ได้ หมดอายุ หรือไม่มีอยู่</span>`;
+        return;
+    }
+    
+    let discount = 0;
+    if(cp.type === 'fixed') {
+        discount = cp.discount;
+    } else {
+        discount = Math.round((p.price * cp.discount) / 100);
+    }
+    
+    let final = p.price - discount;
+    if(final < 0) final = 0;
+    
+    msgZone.innerHTML = `<span style="color:var(--success)">✔️ ใช้ส่วนลด "${cp.description}" ลดไป ฿${discount}</span>`;
+    document.getElementById('finalPriceText').innerText = `฿${final}`;
+    p.tempDiscount = discount;
+    p.tempCouponCode = cp.code;
+}
+
+function submitPurchaseRequest() {
     if(!systemState.tempUploadedImageUrl) {
-        return alert("❌ กรุณาทำการลากหรือเลือกอัปโหลดรูปภาพหลักฐานสลิปการโอนเงินเพื่อยืนยันรายการค่ะ!");
+        return alert("❌ กรุณาอัปโหลดสลิปธนาคารหลักฐานการโอนเงินเพื่อดำเนินการต่อ");
     }
+    const p = systemState.selectedPurchaseProduct;
+    const finalAmt = p.price - (p.tempDiscount || 0);
     
-    const finalPriceText = document.getElementById('finalPriceText');
-    let finalPrice = p.price;
-    let usedCoupon = "";
-    let cutAmount = 0;
-    
-    if(finalPriceText.hasAttribute('data-discounted-value')) {
-        finalPrice = parseInt(finalPriceText.getAttribute('data-discounted-value'));
-        usedCoupon = finalPriceText.getAttribute('data-used-coupon');
-        cutAmount = parseInt(finalPriceText.getAttribute('data-cut-amount'));
-    }
-    
-    let gwName = systemState.currentSelectedGateway === 'pp' ? 'PromptPay QR' : 'TrueMoney QR';
-    
-    if(usedCoupon) {
-        let cp = systemState.coupons.find(c => c.code === usedCoupon);
-        if(cp) {
-            cp.currentUsageCount = (cp.currentUsageCount || 0) + 1;
-            systemState.couponUsageLogs.push({
-                username: systemState.currentUser.username,
-                userId: systemState.currentUser.id,
-                code: usedCoupon,
-                discountValue: cutAmount,
-                usedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-                productName: p.name
-            });
-        }
-    }
-    
-    systemState.slipChecks.push({
-        id: "SLIP-" + Math.floor(1000 + Math.random() * 9000),
+    const newSlip = {
+        id: "SLIP-" + Math.floor(1000 + Math.random()*9000),
         userId: systemState.currentUser.id,
         username: systemState.currentUser.username,
         prodName: p.name,
-        gateway: gwName,
-        amountPaid: finalPrice,
-        reqAmount: finalPrice,
+        gateway: systemState.currentSelectedGateway === 'pp' ? 'PromptPay QR' : 'TrueMoney QR',
+        amountPaid: finalAmt,
+        reqAmount: p.price,
         slipImg: systemState.tempUploadedImageUrl,
         isToday: true,
         isAmountMatch: true,
-        status: "รอการตรวจสอบ",
-        date: new Date().toISOString().split('T')[0],
-        couponCodeUsed: usedCoupon
-    });
+        status: "รอตรวจสอบ",
+        date: new Date().toISOString().substring(0,10),
+        uploadTime: new Date().toLocaleString('th-TH'),
+        couponCodeUsed: p.tempCouponCode || "",
+        discountAmount: p.tempDiscount || 0,
+        totalBefore: p.price,
+        totalAfter: finalAmt,
+        adminNotes: "",
+        approver: ""
+    };
     
-    alert("🚀 แนบหลักฐานสำเร็จ! ระบบส่งรายการสลิปไปให้ผู้ดูแลระบบตรวจสอบเรียบร้อย สามารถเช็คสถานะได้ที่เมนูประวัติการสั่งซื้อ");
-    systemState.tempUploadedImageUrl = "";
+    systemState.slipChecks.push(newSlip);
+    systemState.unreadCounts.newSlips++;
+    
+    if (systemState.config.notifyUploadSlip) {
+        sendDiscordWebhook("💸 สมาชิกส่งสลิป", `ผู้ใช้: ${systemState.currentUser.nickname} ส่งหลักฐานการชำระเงินจำนวน ฿${finalAmt} สำหรับสินค้า ${p.name}`);
+    }
+    
+    alert("💸 ส่งหลักฐานสลิปการโอนเรียบร้อย แอดมินกำลังรีบตรวจสอบรายการ");
     switchMenu('navHistory');
 }
 
-function renderHistoryView() {
+function renderHistoryView(el) {
     let html = `
-        <h2 style="margin-top:0; color:var(--primary);">📜 ประวัติการสั่งซื้อและสถานะบิลชำระเงิน</h2>
-        <p style="color:var(--text-dim); font-size:14px;">รายการสินค้าที่ชำระเงินเสร็จสิ้นและรายการสลิปที่รอตรวจสอบอนุมัติ</p>
-        
-        <h3 style="margin-top:20px;">📦 คลังสินค้าที่ซื้อแล้ว (ดาวน์โหลดสคริปต์)</h3>
+        <h2 style="color:var(--primary); margin-bottom:20px;">📜 ประวัติการสั่งซื้อและสถานะส่งสลิปของคุณ</h2>
+        <h4 style="margin:10px 0;">📦 สินค้าที่คุณเป็นเจ้าของแล้ว</h4>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th>รหัสคำสั่งซื้อ</th>
-                        <th>ชื่อรายการสินค้า</th>
-                        <th>ราคา</th>
-                        <th>วันที่สั่งซื้อ</th>
-                        <th>ลิงก์ดาวน์โหลดซอร์สโค้ด</th>
-                    </tr>
+                    <tr><th>รหัสการซื้อ</th><th>ชื่อสินค้า</th><th>ราคาสุทธิ</th><th>วันที่สั่งซื้อ</th><th>ดาวน์โหลดไฟล์</th></tr>
                 </thead>
-                <tbody>`;
-                
+                <tbody>
+    `;
+    
     let userOrders = systemState.orders.filter(o => o.userId === systemState.currentUser.id);
     if(userOrders.length === 0) {
-        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-dim);">ยังไม่พบประวัติการซื้อสคริปต์สำเร็จ</td></tr>`;
+        html += `<tr><td colspan="5" style="text-align:center; color:var(--text-dim);">คุณยังไม่มีประวัติซื้อสำเร็จในระบบ</td></tr>`;
     } else {
         userOrders.forEach(o => {
-            html += `
-                <tr>
-                    <td><b>${o.id}</b></td>
-                    <td>${o.name}</td>
-                    <td><span style="color:var(--primary); font-weight:bold;">${o.price} ฿</span></td>
-                    <td>${o.date}</td>
-                    <td><a href="${o.downloadLink}" target="_blank" class="btn btn-success" style="padding:5px 10px; font-size:12px; text-decoration:none;">📥 ดาวน์โหลดไฟล์</a></td>
-                </tr>
-            `;
+            html += `<tr><td>${o.id}</td><td><b>${o.name}</b></td><td>฿${o.price}</td><td>${o.date}</td><td><a href="${o.downloadLink}" class="btn btn-success" style="padding:4px 10px; font-size:12px;" target="_blank">📥 ดาวน์โหลด</a></td></tr>`;
         });
     }
     
+    html += `</tbody></table></div><br>`;
+    
     html += `
-                </tbody>
-            </table>
-        </div>
-        
-        <h3 style="margin-top:30px;">💸 สถานะรายการแจ้งอัปโหลดสลิป</h3>
+        <h4 style="margin:10px 0; color:#ef8300;">💸 ประวัติรายการสลิปที่รอแอดมินอนุมัติ</h4>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th>รหัสบิล</th>
-                        <th>สินค้า</th>
-                        <th>ช่องทางจ่ายเงิน</th>
-                        <th>ยอดเงินในสลิป</th>
-                        <th>โค้ดส่วนลดที่ใช้</th>
-                        <th>ภาพสลิป</th>
-                        <th>สถานะระบบ</th>
-                    </tr>
+                    <tr><th>รหัสรายการ</th><th>สินค้าคาดหวัง</th><th>ช่องทาง</th><th>ยอดโอน</th><th>สถานะ</th><th>รูปภาพ</th></tr>
                 </thead>
-                <tbody>`;
-                
+                <tbody>
+    `;
+    
     let userSlips = systemState.slipChecks.filter(s => s.userId === systemState.currentUser.id);
     if(userSlips.length === 0) {
-        html += `<tr><td colspan="7" style="text-align:center; color:var(--text-dim);">ยังไม่มีบันทึกประวัติรายงานอัปโหลดส่งสลิป</td></tr>`;
+        html += `<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">ไม่มีรายการที่ส่งสลิปเข้ามา</td></tr>`;
     } else {
         userSlips.forEach(s => {
-            let stColor = s.status === 'อนุมัติแล้ว' ? 'var(--success)' : (s.status === 'ปฏิเสธ' ? 'var(--danger)' : 'var(--warning)');
+            let stColor = "badge-warning";
+            if(s.status === "อนุมัติแล้ว") stColor = "badge-success";
+            if(s.status === "ปฏิเสธ") stColor = "badge-danger";
+            
             html += `
                 <tr>
-                    <td><b>${s.id}</b></td>
+                    <td>${s.id}</td>
                     <td>${s.prodName}</td>
-                    <td><small>${s.gateway}</small></td>
-                    <td><b style="color:var(--primary);">${s.amountPaid} ฿</b></td>
-                    <td>${s.couponCodeUsed ? `<span class="badge badge-admin">${s.couponCodeUsed}</span>` : '-'}</td>
-                    <td><a href="${s.slipImg}" target="_blank"><img src="${s.slipImg}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></a></td>
-                    <td><span style="color:${stColor}; font-weight:bold;">● ${s.status}</span></td>
+                    <td>${s.gateway}</td>
+                    <td>฿${s.amountPaid}</td>
+                    <td><span class="badge ${stColor}">${s.status}</span></td>
+                    <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewSlipZoom('${s.slipImg}')">👁️ ส่องรูป</button></td>
                 </tr>
             `;
         });
     }
-    
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
-    document.getElementById('mainContent').innerHTML = html;
+    html += `</tbody></table></div>`;
+    el.innerHTML = html;
 }
 
 function renderProfileView() {
@@ -1198,189 +1325,156 @@ function saveUserProfileChanges() {
     renderProfileView();
 }
 
-function renderTicketView() {
-    let myTickets = systemState.chatTickets.filter(t => t.userId === systemState.currentUser.id);
-    let curTicket = myTickets[0];
-
-    if(!curTicket) {
-        curTicket = {
-            id: "TK-" + Math.floor(1000 + Math.random() * 9000),
+function renderTicketView(el) {
+    let tk = systemState.chatTickets.find(t => t.userId === systemState.currentUser.id);
+    if(!tk) {
+        tk = {
+            id: "TK-" + Math.floor(100 + Math.random()*900),
             userId: systemState.currentUser.id,
             username: systemState.currentUser.username,
-            status: "เปิดคำขอรับเรื่อง",
+            status: "เปิดคำขอใหม่",
             isReadByUser: true,
+            isReadByAdmin: false,
             messages: []
         };
-        systemState.chatTickets.push(curTicket);
-    } else {
-        curTicket.isReadByUser = true;
-        updateNotificationBadge();
+        systemState.chatTickets.push(tk);
     }
-
+    
     let html = `
-        <h2 style="margin-top:0; color:var(--primary);">💬 แจ้งปัญหาการใช้งาน / แชทติดต่อผู้ดูแลระบบโดยตรง</h2>
-        <p style="color:var(--text-dim); font-size:14px; margin-bottom:20px;">มีปัญหาเรื่องการใช้งาน ลิงก์เสีย หรือปัญหาสลิปไม่ได้รับอนุมัติ ส่งแชทคุยที่นี่ได้เลยค่ะ</p>
+        <h2 style="color:var(--primary); margin-bottom:15px;">💬 เมนูติดต่อเจ้าหน้าที่/แชทสดช่วยเหลือ</h2>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:20px;">สถานะเคสของท่าน: <span class="badge badge-warning">${tk.status}</span></p>
         
-        <div style="background:#36393f; border-radius:12px; display:flex; flex-direction:column; height:450px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.1);">
-            <div style="background:#2f3136; padding:12px 20px; display:flex; justify-content:between; align-items:center; color:white; border-bottom:1px solid #202225;">
-                <div>⚡ <b>ห้องสนับสนุนการช่วยเหลือช่วยเหลือส่วนตัว</b> [รหัสตั๋วระบบ: ${curTicket.id}]</div>
-                <div>สถานะ: <span class="badge badge-warning" style="background:#ef8300; color:white; font-size:11px;">${curTicket.status}</span></div>
-            </div>
-            
-            <div style="flex-grow:1; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;" id="userChatAreaBox">`;
-            
-    if(curTicket.messages.length === 0) {
-        html += `<div style="color:#72767d; text-align:center; margin-top:100px; font-size:14px;">💬 ห้องแชทว่างเปล่า พิมพ์ข้อความแรกเพื่อเริ่มคุยกับแอดมินร้านได้ทันทีค่ะ</div>`;
+        <div class="discord-wrapper" style="grid-template-columns: 1fr; height: 380px;">
+            <div class="discord-chat-area">
+                <div class="discord-messages" id="userChatBox">
+    `;
+    
+    if(tk.messages.length === 0) {
+        html += `<div style="text-align:center; color:#72767d; margin-top:50px;">พิมพ์ข้อความด้านล่างเพื่อเริ่มการติดต่อเจ้าหน้าที่ได้ทันที</div>`;
     } else {
-        curTicket.messages.forEach(m => {
-            let isAdm = m.sender === 'admin';
+        tk.messages.forEach(m => {
             html += `
                 <div class="discord-msg">
-                    <img src="${m.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}" alt="Avatar">
+                    <img src="${m.avatar}">
                     <div class="discord-msg-content">
-                        <div class="discord-msg-name" style="${isAdm ? 'color:#ef8300;':''}">
-                            ${m.nickname} <span class="discord-msg-time">${m.time}</span>
-                        </div>
-                        <div style="color:#dcddde; white-space:pre-wrap; line-height:1.4; margin-top:2px;">${m.text}</div>
+                        <div class="discord-msg-name">${m.nickname} <span class="discord-msg-time">${m.time}</span></div>
+                        <div>${m.text}</div>
                     </div>
                 </div>
             `;
         });
     }
-            
-    html += `</div>
-            <div style="padding:15px; background:#36393f;">
-                <div style="display:flex; gap:10px; background:#40444b; border-radius:8px; padding:2px 10px; align-items:center;">
-                    <input type="text" id="userChatInput" class="discord-input-box" placeholder="ส่งข้อความพิมพ์ตอบกลับส่งที่นี่..." onkeydown="if(event.key === 'Enter') sendUserTicketMsg()">
-                    <button class="btn btn-primary" style="padding:6px 14px; border-radius:6px; font-size:13px;" onclick="sendUserTicketMsg()">ส่ง ✉️</button>
+    
+    html += `
+                </div>
+                <div class="discord-input-container">
+                    <input type="text" id="userChatInput" class="discord-input-box" placeholder="พิมพ์ข้อความตอบกลับแอดมินที่นี่... (กด Enter เพื่อส่ง)" onkeypress="if(event.key === 'Enter') sendUserChatMessage()">
                 </div>
             </div>
         </div>
     `;
-    
-    document.getElementById('mainContent').innerHTML = html;
-    setTimeout(() => {
-        let b = document.getElementById('userChatAreaBox');
-        if(b) b.scrollTop = b.scrollHeight;
-    }, 80);
+    el.innerHTML = html;
+    setTimeout(() => { let b = document.getElementById('userChatBox'); if(b) b.scrollTop = b.scrollHeight; }, 50);
 }
 
-function sendUserTicketMsg() {
+function sendUserChatMessage() {
     const input = document.getElementById('userChatInput');
     const txt = input.value.trim();
     if(!txt) return;
-
-    let myTickets = systemState.chatTickets.filter(t => t.userId === systemState.currentUser.id);
-    let curTicket = myTickets[0];
     
-    if(curTicket) {
-        curTicket.messages.push({
+    let tk = systemState.chatTickets.find(t => t.userId === systemState.currentUser.id);
+    if(tk) {
+        tk.status = "ลูกค้ากำลังพิมพ์ตอบกลับ";
+        tk.isReadByAdmin = false;
+        tk.isReadByUser = true;
+        tk.messages.push({
             sender: systemState.currentUser.username,
             nickname: systemState.currentUser.nickname,
             avatar: systemState.currentUser.avatar,
             text: txt,
-            time: new Date().toISOString().replace('T', ' ').substring(0, 16)
+            time: new Date().toISOString().replace('T',' ').substring(0,16)
         });
+        
+        if (systemState.config.notifyAnswerTicket) {
+            sendDiscordWebhook("💬 มีการตอบ Ticket", `ลูกค้า ${systemState.currentUser.nickname} ได้ส่งข้อความใหม่ในระบบซัพพอร์ต`);
+        }
+        
         input.value = "";
-        renderTicketView();
+        renderTicketView(document.getElementById('mainContent'));
     }
 }
 
 // ==========================================
-// --- ฟังก์ชันฝั่งผู้ดูแลระบบ (ADMIN ZONE) ---
+// --- ADMINISTRATIVE VIEWS (ADMIN PANELS) ---
 // ==========================================
-function renderAdminDashboard() {
-    let totalSales = systemState.orders.reduce((sum, o) => sum + o.price, 0);
-    let pendingSlips = systemState.slipChecks.filter(s => s.status === 'รอการตรวจสอบ').length;
-    let html = `
-        <h2 style="margin-top:0; color:#ef8300;">📊 แผงควบคุมภาพรวมข้อมูลสถิติของระบบ</h2>
-        <p style="color:var(--text-dim); font-size:14px; margin-bottom:25px;">ยินดีต้อนรับผู้บริหารจัดการร้านค้า สรุปข้อมูลสำคัญแบบภาพรวม</p>
-        
+function renderAdminDashboardView(el) {
+    // Computations for Analytics Dashboard
+    const totalMembers = systemState.usersDB.length;
+    const onlineMembers = systemState.usersDB.filter(u => u.isOnline).length;
+    
+    let salesToday = 0;
+    let salesMonth = 0;
+    systemState.slipChecks.forEach(s => {
+        if(s.status === "อนุมัติแล้ว") {
+            salesMonth += s.amountPaid;
+            if(s.isToday) salesToday += s.amountPaid;
+        }
+    });
+    
+    const pendingSlips = systemState.slipChecks.filter(s => s.status === "รอตรวจสอบ").length;
+    const unansweredTickets = systemState.chatTickets.filter(t => !t.isReadByAdmin).length;
+    
+    let couponUseCount = 0;
+    systemState.coupons.forEach(c => couponUseCount += c.currentUsageCount);
+    
+    el.innerHTML = `
+        <h2 style="color:#ef8300; margin-bottom:20px;">📊 ภาพรวมสถิติแผงควบคุมระบบ (Admin Dashboard)</h2>
         <div class="stats-grid">
-            <div class="stat-box admin-stat">
-                <div>💰 ยอดขายสะสมทั้งหมด</div>
-                <div class="value">${totalSales} THB</div>
-            </div>
-            <div class="stat-box admin-stat">
-                <div>📦 จำนวนสคริปต์ในคลัง</div>
-                <div class="value">${systemState.products.length} รายการ</div>
-            </div>
-            <div class="stat-box admin-stat">
-                <div>👥 สมาชิกในระบบ</div>
-                <div class="value">${systemState.usersDB.length} คน</div>
-            </div>
-            <div class="stat-box admin-stat">
-                <div>⚠️ สลิปรออนุมัติเงิน</div>
-                <div class="value" style="color:var(--danger);">${pendingSlips} บิล</div>
-            </div>
+            <div class="stat-box admin-stat"><div>สมาชิกลงทะเบียนทั้งหมด</div><div class="value">${totalMembers} คน</div></div>
+            <div class="stat-box admin-stat"><div>สมาชิกที่ออนไลน์อยู่ขณะนี้</div><div class="value" style="color:#34a853;">${onlineMembers} ID</div></div>
+            <div class="stat-box admin-stat"><div>ยอดรายได้วันนี้</div><div class="value" style="color:#34a853;">฿${salesToday}</div></div>
+            <div class="stat-box admin-stat"><div>ยอดขายประจำเดือนนี้</div><div class="value">฿${salesMonth}</div></div>
         </div>
         
-        <h3 style="margin-top:20px;">🛠️ สิทธิ์การเข้าถึงข้อมูลระบบของคุณ</h3>
-        <p style="font-size:14px; line-height:1.6; background:#fffcf5; border-left:4px solid #ef8300; padding:15px; border-radius:4px;">
-            คุณล็อกอินเข้ามาด้วยบัญชีระดับผู้ดูแลระบบ (Admin Access Token) สามารถจัดการแก้ไขฐานข้อมูล คลังสินค้า รายชื่อยูสเซอร์ ตรวจเช็คข้อมูลสลิป และกำหนดค่าการชำระเงินของหน้าเว็บไซต์ทั้งหมดได้ผ่านแท็บเมนูด้านซ้ายมือ
-        </p>
+        <div class="stats-grid">
+            <div class="stat-box admin-stat"><div>งานสลิปที่รอการอนุมัติ</div><div class="value" style="color:var(--danger);">${pendingSlips} รายการ</div></div>
+            <div class="stat-box admin-stat"><div>Ticket ค้างตอบกลับ</div><div class="value" style="color:var(--danger);">${unansweredTickets} เคส</div></div>
+            <div class="stat-box admin-stat"><div>จำนวนการใช้งานคูปองรวม</div><div class="value">${couponUseCount} ครั้ง</div></div>
+            <div class="stat-box admin-stat"><div>สินค้าขายดีที่สุดอันดับ 1</div><div class="value" style="font-size:14px; color:var(--primary); margin-top:15px;">ระบบควบคุมโมเดลอัตโนมัติ</div></div>
+        </div>
+        
+        <div style="background:rgba(239,131,0,0.04); border:1px solid #ffe3c2; padding:20px; border-radius:15px; margin-top:20px;">
+            <h4>⚡ อัปเดตข้อมูลอัตโนมัติ (Live Simulation Log)</h4>
+            <p style="font-size:13px; color:var(--text-dim);">ขณะนี้ระบบพร้อมใช้งาน ข้อมูลทั้งหมดจะคำนวณแบบเรียลไทม์จากตัวแปร State ภายในตัวหน้าเว็บ</p>
+        </div>
     `;
-    document.getElementById('mainContent').innerHTML = html;
 }
 
-function renderAdminMembersView() {
+function renderAdminMembersView(el) {
     let html = `
-        <h2 style="margin-top:0; color:#ef8300;">👥 ระบบบริการจัดการรายชื่อและสิทธิ์ของสมาชิก</h2>
+        <h2 style="color:#ef8300; margin-bottom:20px;">👥 รายชื่อบัญชีสมาชิกภายในระบบทั้งหมด</h2>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th>รหัสยูส</th>
-                        <th>ชื่อผู้ใช้งาน</th>
-                        <th>ชื่อเล่น</th>
-                        <th>อีเมล</th>
-                        <th>ระดับสิทธิ์</th>
-                        <th>สถานะไอดี</th>
-                        <th>การจัดการบัญชี</th>
-                    </tr>
+                    <tr><th>User ID</th><th>รูปโปรไฟล์</th><th>Username</th><th>ชื่อเล่น</th><th>อีเมล</th><th>สิทธิ์สิทธิ</th><th>สถานะบัญชี</th></tr>
                 </thead>
-                <tbody>`;
-                
+                <tbody>
+    `;
     systemState.usersDB.forEach(u => {
-        let isMe = systemState.currentUser && u.id === systemState.currentUser.id;
         html += `
             <tr>
-                <td>#<b>${u.id}</b></td>
+                <td>#US-${u.id}</td>
+                <td><img src="${u.avatar}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;"></td>
                 <td><b>${u.username}</b></td>
                 <td>${u.nickname}</td>
                 <td>${u.email}</td>
-                <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role}</span></td>
-                <td><span style="color:${u.status === 'Active' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${u.status}</span></td>
-                <td>
-                    ${isMe ? `<small style="color:var(--text-dim);">บัญชีปัจจุบันของคุณ</small>` : `
-                        <button class="btn" style="padding:4px 8px; font-size:11px; background:#e2f0fd; color:#0d6efd;" onclick="changeUserRoleAction(${u.id})">🔑 สลับสิทธิ์</button>
-                        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="toggleUserStatusAction(${u.id})">${u.status === 'Active' ? '🚫 แบน' : '✅ ปลดแบน'}</button>
-                    `}
-                </td>
+                <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role.toUpperCase()}</span></td>
+                <td><span class="badge ${u.status==='Active'?'badge-success':'badge-danger'}">${u.status}</span></td>
             </tr>
         `;
     });
-    
     html += `</tbody></table></div>`;
-    document.getElementById('mainContent').innerHTML = html;
-}
-
-function changeUserRoleAction(uid) {
-    let u = systemState.usersDB.find(x => x.id === uid);
-    if(u) {
-        u.role = u.role === 'admin' ? 'user' : 'admin';
-        alert(`เปลี่ยนระดับสิทธิ์ผู้ใช้ ${u.username} เป็น [${u.role}] สำเร็จ`);
-        renderAdminMembersView();
-    }
-}
-
-function toggleUserStatusAction(uid) {
-    let u = systemState.usersDB.find(x => x.id === uid);
-    if(u) {
-        u.status = u.status === 'Active' ? 'Banned' : 'Active';
-        alert(`อัปเดตสถานะไอดีผู้ใช้งาน ${u.username} เป็น [${u.status}] สำเร็จ`);
-        renderAdminMembersView();
-    }
+    el.innerHTML = html;
 }
 
 function renderAdminProductsView() {
@@ -1872,43 +1966,34 @@ function deleteCoupon(cid) {
     }
 }
 
-function renderAdminDepositsView() {
+function renderAdminDepositsView(el) {
     let html = `
-        <h2 style="margin-top:0; color:#ef8300;">💸 รายการสลิปการโอนเงินของลูกค้าที่ส่งรออนุมัติ</h2>
-        <p style="color:var(--text-dim); font-size:13px;">แอดมินต้องส่องภาพสลิปเปรียบเทียบกับรายการราคาบิลชำระก่อนกดยืนยันปล่อยของส่งสินค้าสคริปต์อัตโนมัติ</p>
+        <h2 style="color:#ef8300; margin-bottom:20px;">💸 รายการสลิปที่ลูกค้าส่งเข้ามาเพื่อรอการอนุมัติ</h2>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr>
-                        <th>รหัสบิล</th>
-                        <th>ชื่อสมาชิก</th>
-                        <th>รายการสคริปต์ความต้องการ</th>
-                        <th>ช่องทางชำระ</th>
-                        <th>ราคาเรียกเก็บสลิป</th>
-                        <th>โค้ดส่วนลด</th>
-                        <th>รูปภาพสลิปหลักฐาน</th>
-                        <th>ควบคุมตั๋วการเงิน</th>
-                    </tr>
+                    <tr><th>ID รายการ</th><th>ลูกค้า</th><th>ช่องทางโอน</th><th>ยอดเงินโอน</th><th>วัน-เวลาอัปโหลด</th><th>สถานะสลิป</th><th>จัดการคำขอ</th></tr>
                 </thead>
-                <tbody>`;
-                
-    let pendingSlips = systemState.slipChecks.filter(s => s.status === 'รอการตรวจสอบ');
-    if(pendingSlips.length === 0) {
-        html += `<tr><td colspan="8" style="text-align:center; color:var(--text-dim); padding:30px 0;">👏 ยินดีด้วยค่ะ! บัญชีบิลสลิปทั้งหมดได้รับการตรวจสอบครบถ้วนหมดแล้ว</td></tr>`;
+                <tbody>
+    `;
+    
+    let pending = systemState.slipChecks.filter(s => s.status === "รอตรวจสอบ");
+    if(pending.length === 0) {
+        html += `<tr><td colspan="7" style="text-align:center; color:var(--text-dim);">ไม่มีรายการสลิปค้างส่องตรวจสอบในขณะนี้</td></tr>`;
     } else {
-        pendingSlips.forEach(s => {
+        pending.forEach(s => {
             html += `
                 <tr>
                     <td><b>${s.id}</b></td>
-                    <td><b>${s.username}</b> <small style="color:var(--text-dim);">(#${s.userId})</small></td>
-                    <td>${s.prodName}</td>
-                    <td><small>${s.gateway}</small></td>
-                    <td><b style="color:var(--success);">${s.amountPaid} THB</b></td>
-                    <td>${s.couponCodeUsed ? `<span class="badge badge-admin">${s.couponCodeUsed}</span>` : '-'}</td>
-                    <td><a href="${s.slipImg}" target="_blank"><img src="${s.slipImg}" style="width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></a></td>
+                    <td>${s.username} (ID: ${s.userId})</td>
+                    <td>${s.gateway}</td>
+                    <td style="color:var(--success); font-weight:bold;">฿${s.amountPaid}</td>
+                    <td><small>${s.uploadTime}</small></td>
+                    <td><span class="badge badge-warning">${s.status}</span></td>
                     <td>
-                        <button class="btn btn-success" style="padding:5px 10px; font-size:12px;" onclick="approveSlipAction('${s.id}')">✅ อนุมัติ</button>
-                        <button class="btn btn-danger" style="padding:5px 10px; font-size:12px;" onclick="rejectSlipAction('${s.id}')">❌ ปฏิเสธ</button>
+                        <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px;" onclick="viewSlipZoom('${s.slipImg}')">🔍 ดูรูปขยาย</button>
+                        <button class="btn btn-success" style="padding:4px 8px; font-size:12px;" onclick="actionApproveSlip('${s.id}', true)">อนุมัติ</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:12px;" onclick="actionApproveSlip('${s.id}', false)">ปฏิเสธ</button>
                     </td>
                 </tr>
             `;
@@ -1916,236 +2001,262 @@ function renderAdminDepositsView() {
     }
     
     html += `</tbody></table></div>`;
-    document.getElementById('mainContent').innerHTML = html;
+    el.innerHTML = html;
 }
 
-function approveSlipAction(slipId) {
-    let s = systemState.slipChecks.find(x => x.id === slipId);
-    if(s) {
-        s.status = "อนุมัติแล้ว";
-        let prod = systemState.products.find(p => p.name === s.prodName) || { downloadLink: "https://github.com/example/default" };
+function actionApproveSlip(slipId, isApprove) {
+    let slip = systemState.slipChecks.find(s => s.id === slipId);
+    if(!slip) return;
+    
+    if(isApprove) {
+        slip.status = "อนุมัติแล้ว";
+        slip.approver = systemState.currentUser.nickname;
+        slip.adminNotes = "ตรวจสอบความปลอดภัยและยอดเงินเรียบร้อย";
         
+        // Push to complete orders database for user access
         systemState.orders.push({
-            id: "OR-" + Math.floor(10000 + Math.random() * 90000),
-            username: s.username,
-            userId: s.userId,
-            name: s.prodName,
-            price: s.amountPaid,
-            downloadLink: prod.downloadLink,
-            date: new Date().toISOString().split('T')[0]
+            id: "OR-" + Math.floor(1000 + Math.random()*9000),
+            username: slip.username,
+            userId: slip.userId,
+            name: slip.prodName,
+            price: slip.amountPaid,
+            downloadLink: "https://github.com/mock-download-url/success-package",
+            date: new Date().toISOString().substring(0,10)
         });
         
-        alert(`อนุมัติบิลสลิป ${slipId} เรียบร้อย! ตัวไฟล์สคริปต์ถูกปลดล็อกส่งให้หน้าคลังสินค้าสมาชิกของลูกค้าแล้ว`);
-        renderAdminDepositsView();
+        if (systemState.config.notifyApproveSlip) {
+            sendDiscordWebhook("✅ อนุมัติการชำระเงิน", `รายการ ${slipId} ยอด ฿${slip.amountPaid} ได้รับการอนุมัติโดยแอดมิน`);
+        }
+        alert("✔️ อนุมัติสลิปและทำการส่งมอบสินค้าให้ลูกค้าเรียบร้อยแล้ว");
+    } else {
+        let reason = prompt("ระบุหมายเหตุเหตุผลที่ปฏิเสธสลิป:");
+        slip.status = "ปฏิเสธ";
+        slip.adminNotes = reason || "สลิปซ้ำ หรือยอดเงินไม่ครบถ้วน";
+        slip.approver = systemState.currentUser.nickname;
+        
+        if (systemState.config.notifyRejectSlip) {
+            sendDiscordWebhook("❌ ปฏิเสธการชำระเงิน", `รายการ ${slipId} ถูกปฏิเสธเนื่องจาก: ${slip.adminNotes}`);
+        }
+        alert("❌ ปฏิเสธรายการสลิปเรียบร้อย");
     }
+    switchMenu('navAdminDeposits');
 }
 
-function rejectSlipAction(slipId) {
-    let s = systemState.slipChecks.find(x => x.id === slipId);
-    if(s) {
-        s.status = "ปฏิเสธ";
-        alert(`ปฏิเสธคำขอสลิปบิลหมายเลข ${slipId} แล้ว`);
-        renderAdminDepositsView();
-    }
-}
-
-function renderAdminOrdersView() {
+function renderAdminOrdersView(el) {
     let html = `
-        <h2 style="margin-top:0; color:#ef8300;">🧾 บันทึกรายการประวัติการสั่งซื้อสคริปต์ของลูกค้าทั้งหมด</h2>
-        <p style="color:var(--text-dim); font-size:14px;">แสดงประวัติของลูกค้าที่ชำระเงินสำเร็จเสร็จสมบูรณ์และได้รับสิทธิ์ดาวน์โหลดไฟล์</p>
+        <h2 style="color:#ef8300; margin-bottom:20px;">🧾 บันทึกประวัติการส่งมอบไฟล์ออเดอร์ของลูกค้าสำเร็จ</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr><th>ID ออเดอร์</th><th>ผู้สั่งซื้อ</th><th>รายการสินค้า</th><th>ราคาจำหน่าย</th><th>วันที่บันทึกสำเร็จ</th></tr>
+                </thead>
+                <tbody>
+    `;
+    systemState.orders.forEach(o => {
+        html += `<tr><td>${o.id}</td><td><b>${o.username}</b></td><td>${o.name}</td><td>฿${o.price}</td><td>${o.date}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    el.innerHTML = html;
+}
+
+// ==========================================
+// --- NEW FEATURE: ADMIN COMPREHENSIVE PAYMENTS VIEW ---
+// ==========================================
+function renderAdminPaymentsView(el) {
+    let html = `
+        <h2 style="color:#ef8300; margin-bottom:15px;">💳 ประวัติการบันทึกชำระเงินย้อนหลังทั้งหมด (Payment Ledger)</h2>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:20px;">ผู้ดูแลระบบสามารถตรวจสอบประวัติการทำรายการโอนเงินสลิป ยอดหักส่วนลด และหมายเหตุแอดมินย้อนหลังได้ครบถ้วนจากที่นี่</p>
+        
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>รหัสคำสั่งซื้อ</th>
-                        <th>ชื่อผู้ใช้งานลูกค้า</th>
-                        <th>รายการสินค้าที่ครอบครองสิทธิ์</th>
-                        <th>ราคาหักบัญชีสำเร็จ</th>
-                        <th>วันที่ปลดล็อกส่งของ</th>
+                        <th>ชื่อผู้ใช้ (ID)</th>
+                        <th>สินค้าที่ซื้อ</th>
+                        <th>โค้ดส่วนลด</th>
+                        <th>ยอดเดิมก่อนหัก</th>
+                        <th>ยอดโอนสุทธิ</th>
+                        <th>วันที่อัปโหลด</th>
+                        <th>สถานะ</th>
+                        <th>ผู้อนุมัติ</th>
+                        <th>หมายเหตุแอดมิน</th>
+                        <th>สลิปหลักฐาน</th>
                     </tr>
                 </thead>
-                <tbody>`;
-                
-    systemState.orders.forEach(o => {
-        html += `
-            <tr>
-                <td><b>${o.id}</b></td>
-                <td>${o.username}</td>
-                <td>${o.name}</td>
-                <td><span style="color:#ef8300; font-weight:bold;">${o.price} ฿</span></td>
-                <td>${o.date}</td>
-            </tr>
-        `;
-    });
-    
-    html += `</tbody></table></div>`;
-    document.getElementById('mainContent').innerHTML = html;
-}
-
-function renderAdminSettingsView() {
-    systemState.tempUploadedImageUrl = systemState.config.storeLogo;
-    let tempBannerUrl = systemState.config.homepageImage || "";
-    
-    let html = `
-        <h2 style="margin-top:0; color:#ef8300;">⚙️ ตั้งค่าและบริหารจัดการข้อมูลหน้าเว็บไซต์หลัก</h2>
-        <p style="color:var(--text-dim); font-size:14px; margin-bottom:25px;">แผงปรับเปลี่ยนชื่อร้าน ประกาศ โลโก้ คิวอาร์เกตเวย์รับเงินโดยวิธีอัปโหลดไฟล์ตรง</p>
-        
-        <div style="background:#fff; border:1px solid var(--border); padding:25px; border-radius:16px; display:flex; flex-direction:column; gap:20px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                <div class="form-group">
-                    <label>🌸 ชื่อแบรนด์ร้านค้าแสดงผล (Store Brand Name)</label>
-                    <input type="text" id="cfgStoreName" class="form-control" value="${systemState.config.storeName}">
-                </div>
-                <div class="form-group">
-                    <label>📢 ข้อความประกาศข่าวสารหน้าแรก (Announcement News Box)</label>
-                    <textarea id="cfgAnnounce" class="form-control" rows="2">${systemState.config.announcement}</textarea>
-                </div>
-            </div>
-            
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; border-top:1px dashed #eee; padding-top:20px;">
-                <div class="form-group">
-                    <label style="color:#ef8300; font-weight:bold;">🖼️ อัปโหลดรูปภาพโลโก้ร้านค้าประจำเว็บ (Store Logo File)</label>
-                    <div class="upload-dropzone" id="logoDropzone">
-                        <span class="dz-text">📁 ลากไฟล์โลโก้เว็บใหม่มาวางตรงนี้ หรือกดคลิกเลือกไฟล์ภาพ</span>
-                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'logoPreview', (url)=>systemState.tempUploadedImageUrl = url)">
-                    </div>
-                    <div class="preview-box" id="logoPreview" style="display:block;">
-                        <img src="${systemState.config.storeLogo}" alt="logo picture">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label style="color:#ef8300; font-weight:bold;">🖼️ อัปโหลดรูปแบนเนอร์โฮมเพจหน้าแรก (Homepage Banner Image)</label>
-                    <div class="upload-dropzone" id="bannerDropzone">
-                        <span class="dz-text">📁 ลากไฟล์รูปภาพหรือคลิกเพื่อตั้งแบนเนอร์แสดงผลหลัก</span>
-                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'bannerPreview', (url)=>tempBannerUrl = url)">
-                    </div>
-                    <div class="preview-box" id="bannerPreview" style="display:block;">
-                        <img src="${systemState.config.homepageImage || ''}" alt="banner picture">
-                    </div>
-                </div>
-            </div>
-            
-            <div style="border-top:1px dashed #eee; padding-top:20px;">
-                <h4 style="margin:0 0 12px 0;">💵 เปิด/ปิด ระบบช่องทางการชำระเงินเกตเวย์บอท</h4>
-                <div style="display:flex; gap:25px; flex-wrap:wrap;">
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                        <input type="checkbox" id="cfgPayPP" ${systemState.config.allowPromptPay ? 'checked':''}> เปิดรับสลิป PromptPay QR
-                    </label>
-                    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                        <input type="checkbox" id="cfgPayTM" ${systemState.config.allowTrueMoneyQR ? 'checked':''}> เปิดรับสลิป TrueMoney QR
-                    </label>
-                </div>
-            </div>
-            
-            <div style="margin-top:10px;">
-                <button class="btn btn-orange" style="padding:12px 35px;" onclick="saveWebsiteSystemConfig(tempBannerUrl)">💾 บันทึกการกำหนดค่าข้อมูลทั้งหมด</button>
-            </div>
-        </div>
+                <tbody>
     `;
     
-    document.getElementById('mainContent').innerHTML = html;
-    setupDragAndDrop('logoDropzone', 'logoPreview', (url)=>systemState.tempUploadedImageUrl = url);
-    setupDragAndDrop('bannerDropzone', 'bannerPreview', (url)=>tempBannerUrl = url);
+    if (systemState.slipChecks.length === 0) {
+        html += `<tr><td colspan="10" style="text-align:center; color:var(--text-dim);">ไม่พบประวัติธุรกรรมการชำrateเงินในระบบ</td></tr>`;
+    } else {
+        systemState.slipChecks.forEach(s => {
+            let badgeClass = "badge-warning";
+            if (s.status === "อนุมัติแล้ว") badgeClass = "badge-success";
+            if (s.status === "ปฏิเสธ") badgeClass = "badge-danger";
+            
+            html += `
+                <tr>
+                    <td><b>${s.username}</b><br><small style="color:var(--text-dim);">#US-${s.userId}</small></td>
+                    <td>${s.prodName}</td>
+                    <td><code>${s.couponCodeUsed || '-'}</code><br><small style="color:var(--danger);">${s.discountAmount > 0 ? 'ลด ฿'+s.discountAmount : ''}</small></td>
+                    <td>฿${s.totalBefore || s.reqAmount}</td>
+                    <td style="font-weight:bold; color:var(--success);">฿${s.amountPaid}</td>
+                    <td><small>${s.uploadTime || s.date}</small></td>
+                    <td><span class="badge ${badgeClass}">${s.status}</span></td>
+                    <td>${s.approver || '-'}</td>
+                    <td><span style="font-size:12px; color:var(--text-dim);">${s.adminNotes || '-'}</span></td>
+                    <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="viewSlipZoom('${s.slipImg}')">👁️ ส่องรูป</button></td>
+                </tr>
+            `;
+        });
+    }
+    
+    html += `</tbody></table></div>`;
+    el.innerHTML = html;
 }
 
-function saveWebsiteSystemConfig(bannerUrl) {
-    const name = document.getElementById('cfgStoreName').value.trim();
-    const announce = document.getElementById('cfgAnnounce').value.trim();
-    const payPP = document.getElementById('cfgPayPP').checked;
-    const payTM = document.getElementById('cfgPayTM').checked;
-
-    if(!name) return alert("❌ ชื่อแบรนด์ห้ามตั้งค่าให้ว่างเปล่าค่ะ");
-    
-    systemState.config.storeName = name;
-    systemState.config.announcement = announce;
-    systemState.config.allowPromptPay = payPP;
-    systemState.config.allowTrueMoneyQR = payTM;
-    
-    if(systemState.tempUploadedImageUrl) {
-        systemState.config.storeLogo = systemState.tempUploadedImageUrl;
-    }
-    if(bannerUrl) {
-        systemState.config.homepageImage = bannerUrl;
-    }
-
-    alert("🎉 บันทึกปรับปรุงข้อมูลระบบเว็บไซต์ส่วนกลางเรียบร้อยถาวรแล้วค่ะ!");
-    syncHeaderStats();
-    renderAdminSettingsView();
-}
-
-function renderAdminLogsView() {
-    let t = systemState.chatTickets.find(x => x.id === systemState.selectedChannelId);
-    let html = `
-        <h2 style="margin-top:0; color:#ef8300;">💬 แผงควบคุมรับแจ้งปัญหาดูแลแชทเทียร์ของลูกค้า</h2>
-        <p style="color:var(--text-dim); font-size:14px; margin-bottom:20px;">ห้องคุยช่วยเหลือแก้ไขปัญหา ตอบสนองรวดเร็วสไตล์ห้องดิสคอร์ดเซิร์ฟเวอร์</p>
+function renderAdminSettingsView(el) {
+    const cfg = systemState.config;
+    el.innerHTML = `
+        <h2 style="color:#ef8300; margin-bottom:20px;">⚙️ ระบบจัดการข้อมูลและตั้งค่าความปลอดภัยเว็บไซต์</h2>
         
+        <div class="form-group">
+            <label>🌸 ชื่อร้านค้าด่วน (Store Name Display)</label>
+            <input type="text" id="cfgStoreName" class="form-control" value="${cfg.storeName}">
+        </div>
+        <div class="form-group">
+            <label>📢 ข้อความประกาศข่าววิ่งหน้าแรก (Announcement Board)</label>
+            <input type="text" id="cfgAnnounce" class="form-control" value="${cfg.announcement}">
+        </div>
+
+        <div class="form-group" style="background:#fff3f5; padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+            <label style="font-weight:bold; color:var(--primary); display:block; margin-bottom:10px;">🖼️ อัปโหลดรูปภาพสื่อส่วนหัวและระบบร้านค้า (ห้ามใช้ URL)</label>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div>
+                    <label style="font-size:12px;">1. โลโก้ร้านค้า (Store Logo)</label>
+                    <div class="upload-dropzone" id="logoDropzone">
+                        <span class="dz-text" style="font-size:11px;">วางรูปโลโก้</span>
+                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'logoPreview', (url) => { systemState.config.storeLogo = url; })">
+                    </div>
+                    <div class="preview-box" id="logoPreview"><img src="${cfg.storeLogo}"></div>
+                </div>
+                <div>
+                    <label style="font-size:12px;">2. คิวอาร์โค้ดรับเงิน PromptPay QR</label>
+                    <div class="upload-dropzone" id="qrDropzone">
+                        <span class="dz-text" style="font-size:11px;">วางรูป QR Code</span>
+                        <input type="file" accept="image/*" onchange="handleFileSelect(event, 'qrPreview', (url) => { systemState.config.promptpayQrUrl = url; })">
+                    </div>
+                    <div class="preview-box" id="qrPreview"><img src="${cfg.promptpayQrUrl}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="background:#f4f5f7; padding:15px; border-radius:12px; border:1px solid #ddd;">
+            <label style="font-weight:bold; color:var(--discord-blurple); display:block; margin-bottom:10px;">🔮 ระบบเปิด-ปิด แจ้งเตือน Discord Webhook Notification</label>
+            <div class="form-group">
+                <label>Discord Webhook URL</label>
+                <input type="text" id="cfgWebhookUrl" class="form-control" value="${cfg.webhookUrl}">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px;">
+                <label><input type="checkbox" id="ntReg" ${cfg.notifyNewRegister?'checked':''}> สมาชิกสมัครใหม่</label>
+                <label><input type="checkbox" id="ntLogin" ${cfg.notifyLogin?'checked':''}> สมาชิกเข้าสู่ระบบ</label>
+                <label><input type="checkbox" id="ntOrder" ${cfg.notifyCreateOrder?'checked':''}> สมาชิกส่งคำสั่งซื้อ</label>
+                <label><input type="checkbox" id="ntSlip" ${cfg.notifyUploadSlip?'checked':''}> สมาชิกอัปโหลดสลิป</label>
+                <label><input type="checkbox" id="ntApprove" ${cfg.notifyApproveSlip?'checked':''}> อนุมัติการชำระเงิน</label>
+                <label><input type="checkbox" id="ntReject" ${cfg.notifyRejectSlip?'checked':''}> ปฏิเสธการชำระเงิน</label>
+                <label><input type="checkbox" id="ntAnswer" ${cfg.notifyAnswerTicket?'checked':''}> มีการคุยตอบ Ticket</label>
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-orange btn-block" onclick="saveWebsiteConfigs()">💾 บันทึกสัญญารับรองค่าคอนฟิกทั้งหมด</button>
+    `;
+    
+    setupDragAndDrop('logoDropzone', 'logoPreview', (url) => { systemState.config.storeLogo = url; });
+    setupDragAndDrop('qrDropzone', 'qrPreview', (url) => { systemState.config.promptpayQrUrl = url; });
+}
+
+function saveWebsiteConfigs() {
+    systemState.config.storeName = document.getElementById('cfgStoreName').value;
+    systemState.config.announcement = document.getElementById('cfgAnnounce').value;
+    systemState.config.webhookUrl = document.getElementById('cfgWebhookUrl').value;
+    
+    systemState.config.notifyNewRegister = document.getElementById('ntReg').checked;
+    systemState.config.notifyLogin = document.getElementById('ntLogin').checked;
+    systemState.config.notifyCreateOrder = document.getElementById('ntOrder').checked;
+    systemState.config.notifyUploadSlip = document.getElementById('ntSlip').checked;
+    systemState.config.notifyApproveSlip = document.getElementById('ntApprove').checked;
+    systemState.config.notifyRejectSlip = document.getElementById('ntReject').checked;
+    systemState.config.notifyAnswerTicket = document.getElementById('ntAnswer').checked;
+    
+    if (systemState.config.notifyConfigChange) {
+        sendDiscordWebhook("⚙️ เปลี่ยนแปลงข้อมูลระบบ", "ผู้ดูแลระบบได้ทำการเปลี่ยนแปลงข้อมูลการตั้งค่าและนโยบายความปลอดภัยบนแผงควบคุมหลัก");
+    }
+    
+    alert("⚙️ เซฟอัปเดตโครงสร้างระบบเว็บหลักเสร็จสิ้น");
+    initDashboard();
+}
+
+function renderAdminLogsView(el) {
+    let html = `
+        <h2 style="color:#ef8300; margin-bottom:15px;">💬 แชทช่วยเหลือจัดการปัญหา (Discord สไตล์ของแอดมิน)</h2>
         <div class="discord-wrapper">
             <div class="discord-channels">
-                <div style="font-size:11px; color:#8e9297; font-weight:bold; padding-left:10px; text-transform:uppercase; margin-bottom:5px;">📋 รายชื่อตั๋วรับเรื่อง</div>`;
-                
+                <div style="font-weight:bold; color:#fff; font-size:12px; margin-bottom:8px; text-transform:uppercase;">ห้องแชทสิทธิ์ลูกค้า</div>
+    `;
+    
     systemState.chatTickets.forEach(tk => {
-        let isAct = tk.id === systemState.selectedChannelId ? 'active' : '';
+        let activeClass = (tk.id === systemState.selectedChannelId) ? "active" : "";
+        let unreadIndicator = (!tk.isReadByAdmin) ? " 🔴" : "";
         html += `
-            <button class="discord-channel-item ${isAct}" onclick="selectAdminChannel('${tk.id}')">
-                <span># 🎫 ${tk.username}</span>
-                <span style="font-size:10px; background:#ef8300; color:white; padding:1px 4px; border-radius:3px;">${tk.status}</span>
+            <button class="discord-channel-item ${activeClass}" onclick="selectAdminChannel('${tk.id}')">
+                <span># 💬 ${tk.username}</span>
+                <span style="font-size:10px; color:var(--warning);">${tk.status}${unreadIndicator}</span>
             </button>
         `;
     });
     
-    html += `</div>
+    html += `
+            </div>
             <div class="discord-chat-area">
-                <div style="padding:10px 20px; background:#2f3136; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #202225;">
-                    <div style="color:white; font-weight:bold;">💬 กำลังสนทนากับลูกค้า: ${t ? t.username : 'ไม่ได้เลือก'}</div>
-                    ${t ? `
-                    <div style="display:flex; gap:6px;">
-                        <button class="btn btn-success" style="padding:4px 8px; font-size:11px;" onclick="changeTicketStatusAction('แก้ไขแล้ว')">✔ แก้ไขแล้ว</button>
-                        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="changeTicketStatusAction('ยกเลิกตั๋ว')">✖ ยกเลิก</button>
-                    </div>` : ''}
-                </div>
-                
-                <div class="discord-messages" id="adminChatBoxArea">`;
-                
-    if(!t) {
-        html += `<div style="color:#72767d; text-align:center; margin-top:150px;">⬅ กรุณาเลือกห้องตั๋วการพูดคุยที่แถบด้านซ้ายมือ</div>`;
-    } else if(t.messages.length === 0) {
-        html += `<div style="color:#72767d; text-align:center; margin-top:150px;">ไม่มีบันทึกประวัติการส่งแชทในตั๋วคำขอนี้</div>`;
-    } else {
-        t.messages.forEach(m => {
-            let isAdm = m.sender === 'admin';
+                <div class="discord-messages" id="adminChatBox">
+    `;
+    
+    let activeTk = systemState.chatTickets.find(x => x.id === systemState.selectedChannelId);
+    if(activeTk) {
+        activeTk.isReadByAdmin = true; // Mark read when viewed
+        activeTk.messages.forEach(m => {
             html += `
                 <div class="discord-msg">
-                    <img src="${m.avatar}" alt="Avatar">
+                    <img src="${m.avatar}">
                     <div class="discord-msg-content">
-                        <div class="discord-msg-name" style="${isAdm ? 'color:#ef8300;':''}">
-                            ${m.nickname} <span class="discord-msg-time">${m.time}</span>
-                        </div>
-                        <div style="color:#dcddde; white-space:pre-wrap; margin-top:2px;">${m.text}</div>
+                        <div class="discord-msg-name">${m.nickname} <span class="discord-msg-time">${m.time}</span></div>
+                        <div>${m.text}</div>
                     </div>
                 </div>
             `;
         });
     }
     
-    html += `</div>
+    html += `
+                </div>
+                <div style="padding:0 20px; display:flex; gap:10px; margin-bottom:10px;">
+                    <button class="btn btn-success" style="padding:6px 12px; font-size:12px;" onclick="changeTicketStatusAction('ดำเนินการเสร็จสิ้น')">✅ ปิดงาน</button>
+                    <button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="changeTicketStatusAction('ระงับเรื่องชั่วคราว')">⚠️ พักเคส</button>
+                </div>
                 <div class="discord-input-container">
-                    <input type="text" id="adminChatInput" class="discord-input-box" placeholder="พิมพ์ข้อความตอบกลับลูกค้าในฐานะ (ผู้ดูแลระบบ)..." ${!t ? 'disabled' : ''} onkeydown="if(event.key === 'Enter') sendAdminChatMessage()">
+                    <input type="text" id="adminChatInput" class="discord-input-box" placeholder="พิมพ์โต้ตอบกลับลูกค้าในฐานะทีมผู้ดูแลระบบ... (กด Enter เพื่อส่ง)" onkeypress="if(event.key === 'Enter') sendAdminChatMessage()">
                 </div>
             </div>
         </div>
     `;
-    
-    document.getElementById('mainContent').innerHTML = html;
-    setTimeout(() => {
-        let box = document.getElementById('adminChatBoxArea');
-        if(box) box.scrollTop = box.scrollHeight;
-    }, 100);
+    el.innerHTML = html;
+    setTimeout(() => { let b = document.getElementById('adminChatBox'); if(b) b.scrollTop = b.scrollHeight; }, 50);
 }
 
 function selectAdminChannel(tkId) {
     systemState.selectedChannelId = tkId;
-    renderAdminLogsView();
+    renderAdminLogsView(document.getElementById('mainContent'));
 }
 
 function changeTicketStatusAction(statusText) {
@@ -2153,7 +2264,7 @@ function changeTicketStatusAction(statusText) {
     if(t) {
         t.status = statusText;
         alert(`เปลี่ยนสถานะตั๋วคำขอช่วยเหลือเป็น [${statusText}] สำเร็จ`);
-        renderAdminLogsView();
+        renderAdminLogsView(document.getElementById('mainContent'));
     }
 }
 
@@ -2175,19 +2286,31 @@ function sendAdminChatMessage() {
             time: new Date().toISOString().replace('T', ' ').substring(0, 16)
         });
         
+        if (systemState.config.notifyAnswerTicket) {
+            sendDiscordWebhook("💬 แอดมินตอบกลับ", `ทีมผู้ดูแลระบบตอบกลับช่วยเหลือในห้อง Ticket ของคุณ ${t.username}`);
+        }
+        
         input.value = "";
-        renderAdminLogsView();
+        renderAdminLogsView(document.getElementById('mainContent'));
     }
 }
 
 // ==========================================
-// --- เริ่มทำงานระบบเมื่อโหลดหน้าเว็บ ---
+// --- INITIAL SYSTEM LOAD ON WINDOW ---
 // ==========================================
 window.onload = function() {
+    // Show only Authentication Form View at start
     document.getElementById('authSection').style.display = 'block';
     document.getElementById('dashboardSection').style.display = 'none';
-    syncHeaderStats();
-};
+    switchAuthForm('login');
+    
+    // Simulate real-time background polling every 5 seconds to updates dashboards dynamically
+    setInterval(() => {
+        if(systemState.currentUser && systemState.currentUser.role === 'admin') {
+            updateNotificationBadges();
+        }
+    }, 5000);
+}
 </script>
 </body>
 </html>
