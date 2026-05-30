@@ -1450,31 +1450,64 @@ function renderAdminDashboardView(el) {
     `;
 }
 
-function renderAdminMembersView(el) {
+function renderAdminMembersView() {
     let html = `
-        <h2 style="color:#ef8300; margin-bottom:20px;">👥 รายชื่อบัญชีสมาชิกภายในระบบทั้งหมด</h2>
+        <h2 style="margin-top:0; color:#ef8300;">👥 ระบบบริการจัดการรายชื่อและสิทธิ์ของสมาชิก</h2>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr><th>User ID</th><th>รูปโปรไฟล์</th><th>Username</th><th>ชื่อเล่น</th><th>อีเมล</th><th>สิทธิ์สิทธิ</th><th>สถานะบัญชี</th></tr>
+                    <tr>
+                        <th>รหัสยูส</th>
+                        <th>ชื่อผู้ใช้งาน</th>
+                        <th>ชื่อเล่น</th>
+                        <th>อีเมล</th>
+                        <th>ระดับสิทธิ์</th>
+                        <th>สถานะไอดี</th>
+                        <th>การจัดการบัญชี</th>
+                    </tr>
                 </thead>
-                <tbody>
-    `;
+                <tbody>`;
+                
     systemState.usersDB.forEach(u => {
+        let isMe = systemState.currentUser && u.id === systemState.currentUser.id;
         html += `
             <tr>
-                <td>#US-${u.id}</td>
-                <td><img src="${u.avatar}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;"></td>
+                <td>#<b>${u.id}</b></td>
                 <td><b>${u.username}</b></td>
                 <td>${u.nickname}</td>
                 <td>${u.email}</td>
-                <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role.toUpperCase()}</span></td>
-                <td><span class="badge ${u.status==='Active'?'badge-success':'badge-danger'}">${u.status}</span></td>
+                <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role}</span></td>
+                <td><span style="color:${u.status === 'Active' ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${u.status}</span></td>
+                <td>
+                    ${isMe ? `<small style="color:var(--text-dim);">บัญชีปัจจุบันของคุณ</small>` : `
+                        <button class="btn" style="padding:4px 8px; font-size:11px; background:#e2f0fd; color:#0d6efd;" onclick="changeUserRoleAction(${u.id})">🔑 สลับสิทธิ์</button>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="toggleUserStatusAction(${u.id})">${u.status === 'Active' ? '🚫 แบน' : '✅ ปลดแบน'}</button>
+                    `}
+                </td>
             </tr>
         `;
     });
+    
     html += `</tbody></table></div>`;
-    el.innerHTML = html;
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+function changeUserRoleAction(uid) {
+    let u = systemState.usersDB.find(x => x.id === uid);
+    if(u) {
+        u.role = u.role === 'admin' ? 'user' : 'admin';
+        alert(`เปลี่ยนระดับสิทธิ์ผู้ใช้ ${u.username} เป็น [${u.role}] สำเร็จ`);
+        renderAdminMembersView();
+    }
+}
+
+function toggleUserStatusAction(uid) {
+    let u = systemState.usersDB.find(x => x.id === uid);
+    if(u) {
+        u.status = u.status === 'Active' ? 'Banned' : 'Active';
+        alert(`อัปเดตสถานะไอดีผู้ใช้งาน ${u.username} เป็น [${u.status}] สำเร็จ`);
+        renderAdminMembersView();
+    }
 }
 
 function renderAdminProductsView() {
