@@ -2345,80 +2345,81 @@ function sendAdminChatMessage() {
     }
 }
 // ==============================================================================
-// เริ่มต้น: ระบบจัดเก็บข้อมูลถาวร (Persistent Data Storage Module)
-// คัดลอกก้อนนี้ไปวางไว้ท้ายสุดของสคริปต์ได้เลย
+// 1. ระบบจัดเก็บข้อมูลถาวร (Persistent Storage)
 // ==============================================================================
-
 const DatabaseManager = {
     STORAGE_KEY: 'KACHA_SHOPBOT_DATA',
 
-    // 1. ฟังก์ชันโหลดข้อมูลทั้งหมดจาก LocalStorage
-    load: function() {
-        const data = localStorage.getItem(this.STORAGE_KEY);
-        if (data) {
-            // โหลดข้อมูลที่มีอยู่แล้วใน Storage กลับมาใส่ในตัวแปรระบบเดิม
-            window.systemState = Object.assign(window.systemState || {}, JSON.parse(data));
-            console.log("Database: Loaded successfully");
-        } else {
-            this.save(); // ถ้าไม่มีข้อมูล ให้สร้างไฟล์ว่างเริ่มแรก
-        }
-    },
-
-    // 2. ฟังก์ชันบันทึกข้อมูล (เรียกใช้เมื่อมีการเปลี่ยนแปลงข้อมูลใดๆ)
     save: function() {
         if (window.systemState) {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(window.systemState));
         }
     },
 
-    // 3. ฟังก์ชันดึงข้อมูลเฉพาะส่วน (เช่น ดึงเฉพาะประวัติการสั่งซื้อ)
-    getData: function(key) {
-        return window.systemState[key];
-    },
-
-    // 4. ฟังก์ชันสำหรับล้างข้อมูล (เผื่อแอดมินต้องการรีเซ็ตระบบ)
-    resetDatabase: function() {
-        if (confirm("คุณต้องการลบข้อมูลทั้งหมดและเริ่มใหม่ใช่หรือไม่?")) {
-            localStorage.removeItem(this.STORAGE_KEY);
-            location.reload();
+    load: function() {
+        const data = localStorage.getItem(this.STORAGE_KEY);
+        if (data) {
+            const parsed = JSON.parse(data);
+            Object.assign(window.systemState, parsed);
         }
     }
 };
 
-// --- จุดเชื่อมต่อระบบ (Integration Hook) ---
-// แทนที่จะไปแทรกทุกฟังก์ชัน เราใช้การดักจับ (Intercept) ข้อมูล
-// เพื่อให้ทุกครั้งที่มีการเปลี่ยนค่าใน systemState ข้อมูลจะถูกบันทึกอัตโนมัติ
+// ==============================================================================
+// 2. ตั้งค่าระบบเริ่มต้น (Initialize State)
+// ==============================================================================
+window.systemState = {
+    currentUser: null, // ค่านี้จะถูกจำไว้ถ้า Login แล้ว
+    usersDB: [],
+    products: [],      // เพิ่มส่วนนี้เพื่อเก็บข้อมูลสินค้า
+    orders: [],
+    config: { shopName: "Kacha Shop" }
+};
+
+// เปิดใช้งานระบบบันทึกอัตโนมัติผ่าน Proxy
 const handler = {
     set(target, property, value) {
         target[property] = value;
-        DatabaseManager.save(); // บันทึกทุกครั้งที่มีการแก้ไขข้อมูล
+        DatabaseManager.save();
         return true;
     }
 };
 
-// ตรวจสอบว่าระบบเดิมโหลดหรือยัง ถ้ายังให้สร้างตัวแปรเริ่มต้น
-if (!window.systemState) {
-    window.systemState = {
-        usersDB: [],
-        orders: [],
-        slipChecks: [],
-        chatTickets: [],
-        couponUsageLogs: [],
-        adminAuditLogs: [],
-        config: {}
-    };
+window.systemState = new Proxy(window.systemState, handler);
+DatabaseManager.load(); // โหลดข้อมูลทันทีที่เปิดเว็บ
+
+// ==============================================================================
+// 3. ปรับปรุงฟังก์ชัน Login เพื่อป้องกันการหลุด
+// ==============================================================================
+function handleLogin(username) {
+    // สมมติว่านี่คือขั้นตอนการตรวจสอบ User
+    const user = { username: username, role: 'user' }; 
+    systemState.currentUser = user; // Proxy จะสั่ง save ให้อัตโนมัติ
+    renderDashboard();
 }
 
-// เปิดใช้งานระบบบันทึกอัตโนมัติ
-window.systemState = new Proxy(window.systemState, handler);
+function renderDashboard() {
+    // ถ้าเคย Login แล้ว ระบบจะจำได้จาก systemState.currentUser
+    if (systemState.currentUser) {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+        console.log("ยินดีต้อนรับคุณ:", systemState.currentUser.username);
+    }
+}
 
-// โหลดข้อมูลทันทีเมื่อเปิดหน้าเว็บ
-DatabaseManager.load();
-
-console.log("Persistent Storage System: Active and Ready.");
 // ==============================================================================
-// สิ้นสุด: ระบบจัดเก็บข้อมูลถาวร
+// 4. แก้ไข Window Onload ให้เช็คสถานะการเข้าสู่ระบบ
 // ==============================================================================
+window.onload = function() {
+    if (systemState.currentUser) {
+        // ถ้าเคย Login แล้ว ไม่ต้องให้กรอกใหม่
+        renderDashboard();
+    } else {
+        // ถ้ายังไม่ได้ Login ให้ไปหน้า Login
+        document.getElementById('authSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+    }
+};
 // ==========================================
 // --- INITIAL SYSTEM LOAD ON WINDOW ---
 // ==========================================
